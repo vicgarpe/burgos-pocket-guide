@@ -1,0 +1,5 @@
+node_modules/
+_site/
+
+.env
+prompts/20-secretos-dropbox.md

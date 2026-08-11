@@ -1,0 +1,4 @@
+{
+  "uploadChunkThreshold": 100,
+  "uploadPartSize": 100
+}

@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or "Guía de viaje" }}</title>
+  <meta name="description" content="{{ description or 'Itinerario y paradas día a día' }}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ '/styles.css' | url }}">
+</head>
+
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <div class="site-brand">
+        <h1 class="site-title mb-0">
+          <a href="{{ '/' | url }}" class="text-decoration-none">Guía de Berlín</a>
+        </h1>
+        <p class="site-tagline mb-0">Marzo 2026 · Itinerario · Historia · Recursos · Galería</p>
+      </div>
+      <nav class="site-nav" aria-label="Módulos">
+        <a href="{{ '/' | url }}"{% if page.url == '/' %} class="active"{% endif %}>Guía</a>
+        <a href="{{ '/historia/' | url }}"{% if '/historia/' in page.url %} class="active"{% endif %}>Historia</a>
+        <a href="{{ '/recursos/' | url }}"{% if '/recursos/' in page.url %} class="active"{% endif %}>Recursos</a>
+        <a href="{{ '/galeria/' | url }}"{% if '/galeria/' in page.url %} class="active"{% endif %}>Galería</a>
+      </nav>
+    </header>
+
+    <main class="site-main">
+      {{ content | safe }}
+    </main>
+
+    <footer class="site-footer">
+      © {{ build.year }} — Hecho con Eleventy
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  // ── Auth gate unificado ───────────────────────────────────────
+  (function () {
+    var COOKIE = 'viaje_ok';
+    var PWD    = 'bollagas';
+
+    function getCookie(n) {
+      return (document.cookie.split(';').map(function(c){ return c.trim(); })
+        .find(function(c){ return c.startsWith(n + '='); }) || '').split('=')[1] || '';
+    }
+    function setCookie(n, v, days) {
+      var d = new Date();
+      d.setTime(d.getTime() + days * 864e5);
+      document.cookie = n + '=' + v + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+    }
+    function revealGate(wrap) {
+      wrap.querySelector('[data-gate-screen]').classList.add('d-none');
+      wrap.querySelector('[data-gate-content]').classList.remove('d-none');
+    }
+
+    window.viajeAuth = {
+      check: function (el) {
+        var screen = el.closest('[data-gate-screen]') || el.closest('[data-gate]').querySelector('[data-gate-screen]');
+        var input  = screen.querySelector('.viaje-gate-input');
+        if (input.value === PWD) {
+          setCookie(COOKIE, '1', 30);
+          document.querySelectorAll('[data-gate]').forEach(revealGate);
+          document.dispatchEvent(new CustomEvent('viaje:unlocked'));
+        } else {
+          input.classList.add('gate-shake');
+          setTimeout(function () {
+            input.classList.remove('gate-shake');
+            input.value = '';
+            input.focus();
+          }, 500);
+        }
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var gates = document.querySelectorAll('[data-gate]');
+      if (!gates.length) return;
+      if (getCookie(COOKIE) === '1') {
+        gates.forEach(revealGate);
+        document.dispatchEvent(new CustomEvent('viaje:authed'));
+      }
+    });
+  })();
+
+  // Timeline widget — línea de tiempo horizontal con carriles Gantt
+  (function () {
+    var widget = document.querySelector('.timeline-widget');
+    if (!widget) return;
+
+    function toMin(s) { var p = s.split(':'); return +p[0] * 60 + +p[1]; }
+    function pad(n)   { return String(n).padStart(2, '0'); }
+
+    // --- Parsear timetable del DOM ---
+    var headings = Array.from(document.querySelectorAll('h2,h3'));
+    var tHead = headings.find(function(h){ return /timetable/i.test(h.textContent); });
+    if (!tHead) return;
+    var listEl = tHead.nextElementSibling;
+    while (listEl && listEl.tagName !== 'UL' && listEl.tagName !== 'OL') {
+      listEl = listEl.nextElementSibling;
+    }
+    if (!listEl) return;
+
+    var RE = /(\d{1,2}:\d{2})(?:\s*[–\-]\s*(\d{1,2}:\d{2}))?/;
+    var allEvents = [];
+    Array.from(listEl.querySelectorAll('li')).forEach(function(li) {
+      var text = li.textContent.trim();
+      var m = text.match(RE);
+      if (!m) return;
+      var start = toMin(m[1]);
+      var end   = m[2] ? toMin(m[2]) : null;
+      var label = text.slice(text.indexOf(m[0]) + m[0].length)
+        .replace(/^[\s—·\-]+/, '').replace(/\s*\(.*?\)\s*/g, '').trim();
+      if (!label) label = m[0];
+      allEvents.push({ start: start, end: end, label: label });
+    });
+    if (!allEvents.length) return;
+
+    // Separar hitos (puntuales) y eventos con duración
+    var rangeEvs = allEvents.filter(function(e){ return e.end !== null; });
+    var pointEvs = allEvents.filter(function(e){ return e.end === null; });
+
+    // --- Asignación de carriles Gantt para eventos con duración ---
+    // Carril mínimo disponible donde el evento no solapa con el anterior
+    var laneEnds = []; // tiempo de fin del último evento en cada carril
+    rangeEvs.forEach(function(ev) {
+      var placed = false;
+      for (var i = 0; i < laneEnds.length; i++) {
+        if (ev.start >= laneEnds[i] + 2) {
+          ev.lane = i;
+          laneEnds[i] = ev.end;
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        ev.lane = laneEnds.length;
+        laneEnds.push(ev.end);
+      }
+    });
+    var numLanes = Math.max(laneEnds.length, 1);
+
+    // --- Dimensiones ---
+    var PX      = 3;   // px por minuto
+    var LANE_H  = 34;  // altura de cada carril en px
+    var LANE_G  = 5;   // gap entre carriles
+    var TICK_H  = 18;  // zona de hitos bajo los carriles
+    var AXIS_H  = 20;  // zona del eje de horas
+    var PAD_TOP = 6;
+    var trackH  = PAD_TOP + numLanes * (LANE_H + LANE_G) + TICK_H + AXIS_H;
+    var axisTop = trackH - AXIS_H; // posición Y del eje de horas
+
+    // --- Rango del eje X ---
+    var allStarts = allEvents.map(function(e){ return e.start; });
+    var allEnds   = allEvents.map(function(e){ return e.end || e.start; });
+    var now       = new Date();
+    var nowMin    = now.getHours() * 60 + now.getMinutes();
+    var today     = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+    var isToday   = (widget.dataset.date || '') === today;
+
+    var minT = Math.floor(Math.min.apply(null, allStarts) / 60) * 60;
+    var maxT = Math.ceil((Math.max.apply(null, allEnds) + 30) / 60) * 60;
+    if (isToday) {
+      minT = Math.min(minT, Math.floor(Math.max(0, nowMin - 45) / 60) * 60);
+      maxT = Math.max(maxT, Math.ceil((nowMin + 90) / 60) * 60);
+    }
+    var W = (maxT - minT) * PX;
+
+    // --- Cabecera ---
+    var header = document.createElement('div');
+    header.className = 'tl-header';
+    header.innerHTML = '<span>Itinerario del día</span>' +
+      (isToday
+        ? '<span class="tl-header-time">Ahora: ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + '</span>'
+        : '');
+    widget.appendChild(header);
+
+    // --- Scroll + track ---
+    var scroll = document.createElement('div');
+    scroll.className = 'tl-scroll';
+    var track = document.createElement('div');
+    track.className = 'tl-track';
+    track.style.width = W + 'px';
+    track.style.height = trackH + 'px';
+
+    // Eje de horas
+    for (var h = minT; h <= maxT; h += 60) {
+      var x = (h - minT) * PX;
+      var hourEl = document.createElement('div');
+      hourEl.className = 'tl-hour';
+      hourEl.style.left = x + 'px';
+      hourEl.style.top  = '0';
+      hourEl.style.bottom = AXIS_H + 'px';
+      var lbl = document.createElement('span');
+      lbl.className = 'tl-hour-label';
+      lbl.style.bottom = -(AXIS_H - 2) + 'px'; // debajo de la línea
+      lbl.textContent = pad(h / 60) + ':00';
+      hourEl.appendChild(lbl);
+      track.appendChild(hourEl);
+    }
+
+    // Eventos con duración (barras en carriles)
+    var barIndex = 0; // para alternar estilos
+    rangeEvs.forEach(function(ev) {
+      var isPast  = isToday && ev.end < nowMin;
+      var isSolid = (barIndex % 2 === 0);
+      barIndex++;
+      var x    = (ev.start - minT) * PX;
+      var w    = Math.max((ev.end - ev.start) * PX, 8);
+      var top  = PAD_TOP + ev.lane * (LANE_H + LANE_G);
+
+      var el = document.createElement('div');
+      el.className = 'tl-event ' + (isSolid ? 'tl-solid' : 'tl-outline') + (isPast ? ' tl-past' : '');
+      el.style.left   = x + 'px';
+      el.style.width  = w + 'px';
+      el.style.top    = top + 'px';
+      el.style.height = LANE_H + 'px';
+      var timeLabel = pad(Math.floor(ev.start/60)) + ':' + pad(ev.start%60) +
+        '–' + pad(Math.floor(ev.end/60)) + ':' + pad(ev.end%60);
+      el.title = timeLabel + ' — ' + ev.label;
+
+      var span = document.createElement('span');
+      span.className = 'tl-event-label';
+      span.textContent = ev.label;
+      el.appendChild(span);
+      track.appendChild(el);
+    });
+
+    // Hitos (marcas puntuales)
+    var tickZoneTop = PAD_TOP + numLanes * (LANE_H + LANE_G);
+    pointEvs.forEach(function(ev) {
+      var isPast = isToday && ev.start < nowMin;
+      var x = (ev.start - minT) * PX;
+
+      var tick = document.createElement('div');
+      tick.className = 'tl-tick' + (isPast ? ' tl-past' : '');
+      tick.style.left   = x + 'px';
+      tick.style.top    = tickZoneTop + 'px';
+      tick.style.height = (TICK_H - 2) + 'px';
+      tick.title = pad(Math.floor(ev.start/60)) + ':' + pad(ev.start%60) + ' — ' + ev.label;
+
+      var dot = document.createElement('span');
+      dot.className = 'tl-tick-dot';
+      tick.appendChild(dot);
+
+      var tlbl = document.createElement('span');
+      tlbl.className = 'tl-tick-label';
+      tlbl.textContent = pad(Math.floor(ev.start/60)) + ':' + pad(ev.start%60);
+      tick.appendChild(tlbl);
+
+      track.appendChild(tick);
+    });
+
+    // Línea de "ahora"
+    if (isToday && nowMin >= minT && nowMin <= maxT) {
+      var nowX = (nowMin - minT) * PX;
+      var nowLine = document.createElement('div');
+      nowLine.className = 'tl-now';
+      nowLine.style.left   = nowX + 'px';
+      nowLine.style.top    = '0';
+      nowLine.style.bottom = AXIS_H + 'px';
+      var nowLbl = document.createElement('span');
+      nowLbl.className = 'tl-now-label';
+      nowLbl.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes());
+      nowLine.appendChild(nowLbl);
+      track.appendChild(nowLine);
+    }
+
+    scroll.appendChild(track);
+    widget.appendChild(scroll);
+
+    // Auto-scroll al momento actual (o al inicio de los eventos)
+    var target = isToday
+      ? (nowMin - minT) * PX - scroll.clientWidth / 3
+      : (allEvents[0].start - minT) * PX - 20;
+    scroll.scrollLeft = Math.max(0, target);
+
+    // Popup al tocar/clicar un evento o hito (útil en móvil sin hover)
+    var popup = null;
+    function removePopup() {
+      if (popup) { popup.remove(); popup = null; }
+    }
+    function showPopup(el, timeStr, labelStr) {
+      removePopup();
+      popup = document.createElement('div');
+      popup.className = 'tl-popup';
+      popup.innerHTML = '<span class="tl-popup-time">' + timeStr + '</span>' + labelStr;
+      document.body.appendChild(popup);
+
+      var rect = el.getBoundingClientRect();
+      var pw = 220;
+      var left = Math.min(rect.left, window.innerWidth - pw - 8);
+      left = Math.max(8, left);
+      var top = rect.top - popup.offsetHeight - 8;
+      if (top < 8) top = rect.bottom + 8;
+      popup.style.left = left + 'px';
+      popup.style.top  = top  + 'px';
+    }
+
+    track.addEventListener('click', function(e) {
+      var el = e.target.closest('.tl-event, .tl-tick');
+      if (!el) { removePopup(); return; }
+      e.stopPropagation();
+      var titleText = el.title || '';
+      if (!titleText) { removePopup(); return; }
+      // Extraer tiempo del title (formato "HH:MM — label" en ticks, label en bars)
+      var timeMatch = titleText.match(/^(\d{1,2}:\d{2}(?:[–\-]\d{1,2}:\d{2})?)\s*[—–]\s*/);
+      var timeStr  = timeMatch ? timeMatch[1] : '';
+      var labelStr = timeMatch ? titleText.slice(timeMatch[0].length) : titleText;
+      showPopup(el, timeStr, labelStr);
+    });
+
+    document.addEventListener('click', removePopup);
+  })();
+
+  // TTS — hace clicables las columnas "Alemán" en tablas de recursos_idioma
+  (function () {
+    var ICON = '<span class="tts-icon" aria-hidden="true"><svg width="10" height="11" viewBox="0 0 10 11" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 10,5.5 0,11"/></svg></span>';
+
+    document.querySelectorAll('table').forEach(function (table) {
+      var headers = Array.from(table.querySelectorAll('thead th, tr:first-child th'));
+      var idx = headers.findIndex(function (th) { return th.textContent.trim() === 'Alemán'; });
+      if (idx === -1) return;
+      table.querySelectorAll('tbody tr').forEach(function (row) {
+        var td = row.querySelectorAll('td')[idx];
+        if (!td) return;
+        var text = td.textContent.trim();
+        td.innerHTML = '<a href="#" class="tts-link" data-tts="' +
+          text.replace(/&/g,'&amp;').replace(/"/g,'&quot;') +
+          '">' + ICON + ' ' + td.innerHTML + '</a>';
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('[data-tts]');
+      if (!el) return;
+      e.preventDefault();
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      var utt = new SpeechSynthesisUtterance(el.dataset.tts);
+      utt.lang = 'de-DE';
+      utt.rate = 0.9;
+      el.classList.add('tts-playing');
+      utt.onend = function () { el.classList.remove('tts-playing'); };
+      utt.onerror = function () { el.classList.remove('tts-playing'); };
+      window.speechSynthesis.speak(utt);
+    });
+  })();
+  </script>
+</body>
+</html>

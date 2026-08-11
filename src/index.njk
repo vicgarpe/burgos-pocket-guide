@@ -1,0 +1,60 @@
+---
+layout: base.njk
+title: "Guía de Berlín"
+permalink: "/index.html"
+---
+
+{# Hero #}
+<section class="mb-4">
+  <div class="position-relative rounded overflow-hidden">
+    <picture>
+      <source type="image/avif" srcset="{{ '/images/berlin-hero-800.avif' | url }} 800w, {{ '/images/berlin-hero-1200.avif' | url }} 1200w, {{ '/images/berlin-hero-1600.avif' | url }} 1600w">
+      <source type="image/webp" srcset="{{ '/images/berlin-hero-800.webp' | url }} 800w, {{ '/images/berlin-hero-1200.webp' | url }} 1200w, {{ '/images/berlin-hero-1600.webp' | url }} 1600w">
+      <img
+        src="{{ '/images/berlin-hero-1200.jpg' | url }}"
+        srcset="{{ '/images/berlin-hero-800.jpg' | url }} 800w, {{ '/images/berlin-hero-1200.jpg' | url }} 1200w, {{ '/images/berlin-hero-1600.jpg' | url }} 1600w"
+        sizes="(max-width: 576px) 100vw, 960px"
+        alt="Panorámica de Berlín"
+        class="w-100 d-block"
+        loading="lazy"
+      >
+    </picture>
+    <div class="hero-caption">
+      Berlín en 3 días: barrios, rutas y sitios clave sin perder tiempo.
+    </div>
+  </div>
+</section>
+
+{# Intro desde portada.md #}
+<section class="portada-intro mb-5">
+  {{ collections.portada[0].content | safe }}
+</section>
+
+{# Agenda #}
+<h2 class="module-title mb-4">Agenda</h2>
+<div class="row g-4">
+  {% for post in collections.agenda %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <a href="{{ post.url | url }}" class="post-card-link d-block h-100 text-decoration-none text-reset">
+        <article class="card h-100 shadow-sm">
+          <div class="ratio ratio-16x9">
+            {% if post.data.hero %}
+              <img src="{{ post.data.hero | url }}" class="card-img-top object-fit-cover" alt="{{ post.data.alt or post.data.title }}" loading="lazy">
+            {% else %}
+              <img src="https://picsum.photos/800/500?{{ loop.index }}" class="card-img-top object-fit-cover" alt="Imagen" loading="lazy">
+            {% endif %}
+          </div>
+          <div class="card-body">
+            <h3 class="h5 card-title">{{ post.data.title }}</h3>
+            {% if post.data.excerpt %}
+              <p class="card-text text-secondary">{{ post.data.excerpt }}</p>
+            {% endif %}
+          </div>
+          <div class="card-footer bg-white small text-muted">
+            {{ post.date | formatDateFull('es-ES') }}
+          </div>
+        </article>
+      </a>
+    </div>
+  {% endfor %}
+</div>

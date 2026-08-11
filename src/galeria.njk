@@ -1,0 +1,912 @@
+---
+layout: base.njk
+title: "Galería — Guía de Berlín"
+permalink: /galeria/index.html
+---
+
+{% gate %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h2 class="module-title mb-0">Galería</h2>
+  <div class="d-flex gap-2 align-items-center">
+    <button class="gallery-action-btn gallery-cancel-btn d-none" id="gallery-cancel-btn">✕ Cancelar</button>
+    <button class="gallery-action-btn gallery-download-btn d-none" id="gallery-download-btn" disabled>
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+      </svg>
+      Bajar<span id="dl-count"></span>
+    </button>
+    <button class="gallery-action-btn gallery-share-btn d-none" id="gallery-share-btn" disabled>
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5z"/>
+      </svg>
+      Compartir<span id="sh-count"></span>
+    </button>
+    <label class="gallery-upload-btn d-none" id="gallery-upload-label" for="upload-input">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+        <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+      </svg>
+      Subir
+    </label>
+    <input type="file" id="upload-input" accept="image/*,video/*" multiple class="d-none">
+  </div>
+</div>
+
+<div id="upload-progress" class="mb-3 d-none">
+  <div class="progress" style="height:5px">
+    <div id="upload-bar" class="progress-bar" style="width:0%;background:var(--accent)"></div>
+  </div>
+  <p id="upload-label" class="small text-muted mt-1 mb-0"></p>
+</div>
+
+<div id="group-selector" class="gallery-grp-sel mb-3 d-none">
+  <button class="gallery-grp-btn active" data-group="day">Día</button>
+  <button class="gallery-grp-btn" data-group="camera">Cámara</button>
+  <button class="gallery-grp-btn" data-group="type">Tipo</button>
+</div>
+
+<div id="select-all-bar" class="d-none mb-2" style="font-family:var(--font-sans);font-size:.85rem;">
+  <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;color:var(--muted)">
+    <input type="checkbox" id="select-all-check" style="accent-color:var(--accent);width:1rem;height:1rem;">
+    Seleccionar toda la galería
+  </label>
+</div>
+
+<div id="gallery-status" class="text-center py-5">
+  <div class="spinner-border text-secondary" role="status" style="width:2rem;height:2rem"></div>
+  <p class="mt-3 text-muted small">Conectando con Dropbox…</p>
+</div>
+
+<div id="gallery-error" class="alert d-none" role="alert"
+     style="border:1px solid var(--rule);background:#fff9f7;color:#7a3523;border-radius:.65rem"></div>
+
+<div id="gallery-empty" class="text-center py-5 d-none">
+  <p class="text-muted">No hay fotos todavía. ¡Sube la primera!</p>
+</div>
+
+<div id="gallery-grid" class="gallery-grid d-none"></div>
+
+{# Lightbox #}
+<div id="lightbox" class="lightbox-overlay d-none" role="dialog" aria-modal="true" tabindex="-1">
+  <button class="lightbox-close" id="lightbox-close" aria-label="Cerrar">&times;</button>
+  <button class="lightbox-prev" id="lightbox-prev" aria-label="Anterior">&#8249;</button>
+  <button class="lightbox-next" id="lightbox-next" aria-label="Siguiente">&#8250;</button>
+  <div class="lightbox-inner">
+    <div id="lightbox-content" class="lightbox-content"></div>
+    <p id="lightbox-caption" class="lightbox-caption"></p>
+  </div>
+</div>
+
+{% endgate %}
+
+<script src="https://cdn.jsdelivr.net/npm/exifr@7/dist/full.umd.js"></script>
+<script>
+const DROPBOX = {
+  appKey:       '{{ dropbox.appKey }}',
+  appSecret:    '{{ dropbox.appSecret }}',
+  refreshToken: '{{ dropbox.refreshToken }}',
+  folder:       '{{ dropbox.folder }}'
+};
+const UPLOAD = {
+  chunkThreshold: {{ galeria.uploadChunkThreshold }} * 1024 * 1024,
+  partSize:       {{ galeria.uploadPartSize }} * 1024 * 1024
+};
+
+let token = null;
+let allFiles = [];
+let allThumbs = {};
+let currentIdx = 0;
+let isSelectMode = false;
+let selectedFiles = new Set();
+let wasLongPress = false;
+let currentGroupBy = 'day';
+let cameraCache = null; // null = no cargado, Map = ya leído
+
+document.addEventListener('viaje:authed',   initGallery);
+document.addEventListener('viaje:unlocked', initGallery);
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+
+async function initGallery() {
+  try {
+    token = await getAccessToken();
+    const files = await listFolder();
+    allFiles = sortByDate(files.filter(isMedia));
+    if (allFiles.length === 0) {
+      setStatus('hide');
+      document.getElementById('gallery-empty').classList.remove('d-none');
+      document.getElementById('gallery-upload-label').classList.remove('d-none');
+      return;
+    }
+    allThumbs = await batchThumbs(allFiles);
+    renderGrid(allFiles, allThumbs);
+  } catch (err) {
+    showError(err.message || 'Error al cargar la galería');
+  }
+}
+
+// ─── Dropbox API ─────────────────────────────────────────────────────────────
+
+async function getAccessToken() {
+  const r = await fetch('https://api.dropboxapi.com/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type:    'refresh_token',
+      refresh_token: DROPBOX.refreshToken,
+      client_id:     DROPBOX.appKey,
+      client_secret: DROPBOX.appSecret
+    })
+  });
+  const d = await r.json();
+  if (!d.access_token) throw new Error('No se pudo conectar con Dropbox');
+  return d.access_token;
+}
+
+async function dbxJSON(url, body) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+async function listFolder() {
+  let entries = [];
+  let d = await dbxJSON('https://api.dropboxapi.com/2/files/list_folder', {
+    path: DROPBOX.folder, include_media_info: true, limit: 200
+  });
+  entries = entries.concat(d.entries || []);
+  while (d.has_more) {
+    d = await dbxJSON('https://api.dropboxapi.com/2/files/list_folder/continue', { cursor: d.cursor });
+    entries = entries.concat(d.entries || []);
+  }
+  return entries;
+}
+
+function isMedia(f) {
+  return f['.tag'] === 'file' && /\.(jpe?g|png|gif|webp|heic|heif|mp4|mov|m4v|avi|mkv)$/i.test(f.name);
+}
+function isVideo(f) {
+  return /\.(mp4|mov|m4v|avi|mkv)$/i.test(f.name);
+}
+
+function sortByDate(files) {
+  return files.sort((a, b) => {
+    const da = a.media_info?.metadata?.time_taken || a.client_modified || '';
+    const db = b.media_info?.metadata?.time_taken || b.client_modified || '';
+    return da < db ? -1 : da > db ? 1 : 0;
+  });
+}
+
+function getGroupKey(file, groupBy) {
+  if (groupBy === 'day') {
+    const raw = file.media_info?.metadata?.time_taken || file.client_modified || '';
+    return raw ? raw.slice(0, 10) : '';
+  }
+  if (groupBy === 'camera') {
+    return cameraCache?.get(file.path_lower) || '';
+  }
+  if (groupBy === 'type') return isVideo(file) ? 'video' : 'photo';
+  return '';
+}
+
+async function buildCameraCache() {
+  cameraCache = new Map();
+  const photos = allFiles.filter(f => !isVideo(f));
+  const BATCH = 8;
+  for (let i = 0; i < photos.length; i += BATCH) {
+    await Promise.all(photos.slice(i, i + BATCH).map(async file => {
+      // Intentar con metadatos Dropbox primero (cuando están disponibles)
+      const make  = file.media_info?.metadata?.camera_make  || '';
+      const model = file.media_info?.metadata?.camera_model || '';
+      if (make || model) {
+        cameraCache.set(file.path_lower, [make, model].filter(Boolean).join(' '));
+        return;
+      }
+      // Fallback: leer EXIF del fichero (primeros 64 KB)
+      try {
+        const link = await getTempLink(file.path_lower);
+        const r = await fetch(link, { headers: { Range: 'bytes=0-65535' } });
+        const buf = await r.arrayBuffer();
+        const exif = await exifr.parse(buf);
+        const cam = [exif?.Make, exif?.Model].filter(Boolean).join(' ');
+        if (cam) cameraCache.set(file.path_lower, cam);
+      } catch { /* sin EXIF */ }
+    }));
+  }
+}
+
+function formatGroupLabel(key, groupBy) {
+  if (groupBy === 'day') {
+    if (!key) return 'Sin fecha';
+    const d = new Date(key + 'T12:00:00');
+    return d.toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  if (groupBy === 'camera') return key || 'Sin cámara';
+  if (groupBy === 'type')   return key === 'video' ? 'Vídeos' : 'Fotos';
+  return key;
+}
+
+function groupFiles(files, groupBy) {
+  const map = new Map();
+  files.forEach((file, idx) => {
+    const key = getGroupKey(file, groupBy);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push({ file, idx });
+  });
+  const entries = [...map.entries()];
+  if (groupBy === 'day') {
+    entries.sort((a, b) => (a[0] || 'zzz').localeCompare(b[0] || 'zzz'));
+  } else if (groupBy === 'camera') {
+    entries.sort((a, b) => { if (!a[0]) return 1; if (!b[0]) return -1; return a[0].localeCompare(b[0]); });
+  } else if (groupBy === 'type') {
+    entries.sort((a, b) => a[0] === 'photo' ? -1 : 1);
+  }
+  return entries.map(([key, items]) => ({ label: formatGroupLabel(key, groupBy), items }));
+}
+
+async function batchThumbs(files) {
+  const map = {};
+  for (let i = 0; i < files.length; i += 25) {
+    const chunk = files.slice(i, i + 25);
+    const r = await fetch('https://content.dropboxapi.com/2/files/get_thumbnail_batch', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        entries: chunk.map(f => ({
+          path: f.path_lower,
+          format: { '.tag': 'jpeg' },
+          size:   { '.tag': 'w480h320' },
+          mode:   { '.tag': 'fitone_bestfit' }
+        }))
+      })
+    });
+    const d = await r.json();
+    for (const e of (d.entries || [])) {
+      if (e['.tag'] === 'success') {
+        map[e.metadata.path_lower] = 'data:image/jpeg;base64,' + e.thumbnail;
+      }
+    }
+  }
+  return map;
+}
+
+async function getTempLink(path) {
+  const d = await dbxJSON('https://api.dropboxapi.com/2/files/get_temporary_link', { path });
+  return d.link;
+}
+
+async function getLargeThumb(path) {
+  const r = await fetch('https://content.dropboxapi.com/2/files/get_thumbnail', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Dropbox-API-Arg': JSON.stringify({
+        path,
+        format: { '.tag': 'jpeg' },
+        size:   { '.tag': 'w2048h1536' },
+        mode:   { '.tag': 'fitone_bestfit' }
+      })
+    }
+  });
+  if (!r.ok) throw new Error('No se pudo cargar la imagen');
+  return URL.createObjectURL(await r.blob());
+}
+
+// ─── Render grid ─────────────────────────────────────────────────────────────
+
+function makeItem(file, idx, thumbs) {
+  const thumb = thumbs[file.path_lower];
+  const video = isVideo(file);
+  const item = document.createElement('div');
+  item.className = 'gallery-item' + (video ? ' gallery-item--video' : '');
+  item.dataset.idx = idx;
+
+  if (thumb) {
+    const img = document.createElement('img');
+    img.src = thumb;
+    img.alt = file.name;
+    img.loading = 'lazy';
+    item.appendChild(img);
+  } else {
+    item.classList.add('gallery-item--nothumb');
+    item.dataset.name = file.name;
+  }
+
+  if (video) {
+    const play = document.createElement('div');
+    play.className = 'play-btn';
+    play.setAttribute('aria-hidden', 'true');
+    play.innerHTML = `<svg viewBox="0 0 24 24" fill="white" width="44" height="44">
+      <circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.45)"/>
+      <path d="M10 8l6 4-6 4V8z"/>
+    </svg>`;
+    item.appendChild(play);
+  }
+
+  let lpTimer = null;
+  const lpStart = () => {
+    lpTimer = setTimeout(() => { lpTimer = null; wasLongPress = true; enterSelectMode(idx); }, 500);
+  };
+  const lpCancel = () => { clearTimeout(lpTimer); lpTimer = null; };
+  item.addEventListener('touchstart', lpStart, { passive: true });
+  item.addEventListener('touchend',   lpCancel);
+  item.addEventListener('touchmove',  lpCancel);
+  item.addEventListener('mousedown',  lpStart);
+  item.addEventListener('mouseup',    lpCancel);
+  item.addEventListener('mouseleave', lpCancel);
+  item.addEventListener('contextmenu', e => e.preventDefault());
+  item.addEventListener('click', () => {
+    if (wasLongPress) { wasLongPress = false; return; }
+    if (isSelectMode) { toggleSelect(idx); return; }
+    openLightbox(idx);
+  });
+  return item;
+}
+
+function renderGrid(files, thumbs) {
+  setStatus('hide');
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '';
+
+  groupFiles(files, currentGroupBy).forEach(group => {
+    const header = document.createElement('div');
+    header.className = 'gallery-group-header';
+    header.textContent = group.label;
+    grid.appendChild(header);
+    group.items.forEach(({ file, idx }) => grid.appendChild(makeItem(file, idx, thumbs)));
+  });
+
+  grid.classList.remove('d-none');
+  document.getElementById('gallery-upload-label').classList.remove('d-none');
+  document.getElementById('group-selector').classList.remove('d-none');
+}
+
+// ─── Lightbox ────────────────────────────────────────────────────────────────
+
+async function openLightbox(idx) {
+  currentIdx = idx;
+  const lb = document.getElementById('lightbox');
+  lb.classList.remove('d-none');
+  document.body.style.overflow = 'hidden';
+  await loadItem(idx);
+}
+
+function buildExifHTML(exif, dbxMeta, fileName) {
+  const rows = [];
+
+  // Nombre del archivo
+  if (fileName) rows.push(`<span style="opacity:.6;font-size:.78rem">${fileName}</span>`);
+
+  // Fecha
+  const dateRaw = exif?.DateTimeOriginal || (dbxMeta?.time_taken ? new Date(dbxMeta.time_taken) : null);
+  if (dateRaw) {
+    const d = dateRaw instanceof Date ? dateRaw : new Date(dateRaw);
+    rows.push(d.toLocaleDateString('es-ES', { weekday:'long', day:'2-digit', month:'long', year:'numeric' })
+      + ' · ' + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' }));
+  }
+
+  // Dimensiones
+  const w = exif?.ImageWidth  || dbxMeta?.dimensions?.width;
+  const h = exif?.ImageHeight || dbxMeta?.dimensions?.height;
+  if (w && h) rows.push(`${w} × ${h} px`);
+
+  // Cámara
+  const cam = [exif?.Make, exif?.Model].filter(Boolean).join(' ');
+  if (cam) rows.push(cam);
+
+  // Exposición
+  const exp = [];
+  if (exif?.FocalLength)     exp.push(`${exif.FocalLength.toFixed(1)} mm`);
+  if (exif?.FNumber)         exp.push(`f/${exif.FNumber}`);
+  if (exif?.ExposureTime)    exp.push(exif.ExposureTime < 1 ? `1/${Math.round(1/exif.ExposureTime)} s` : `${exif.ExposureTime} s`);
+  if (exif?.ISOSpeedRatings) exp.push(`ISO ${exif.ISOSpeedRatings}`);
+  if (exp.length) rows.push(exp.join('  ·  '));
+
+  // Flash y balance de blancos
+  const extras = [];
+  if (exif?.Flash !== undefined) extras.push((exif.Flash & 1) ? 'Flash' : 'Sin flash');
+  if (exif?.WhiteBalance !== undefined) extras.push(exif.WhiteBalance === 0 ? 'WB auto' : 'WB manual');
+  if (extras.length) rows.push(extras.join('  ·  '));
+
+  // GPS: exifr da lat/lon en decimal directamente
+  const lat = exif?.latitude  ?? dbxMeta?.location?.latitude;
+  const lon = exif?.longitude ?? dbxMeta?.location?.longitude;
+  if (lat != null && lon != null) {
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lat.toFixed(5) + ',' + lon.toFixed(5))}`;
+    rows.push(`<a class="map-link" href="${url}" target="_blank" rel="noopener noreferrer"><span class="map-tag">MAPS</span><span class="map-link-text">${lat.toFixed(5)}, ${lon.toFixed(5)}</span></a>`);
+  }
+
+  return rows;
+}
+
+async function fetchExifFromFile(path) {
+  if (typeof exifr === 'undefined') return null;
+  try {
+    // Solo los primeros 64 KB del fichero original (EXIF siempre está al inicio del JPEG)
+    const link = await getTempLink(path);
+    const r = await fetch(link, { headers: { Range: 'bytes=0-65535' } });
+    const buf = await r.arrayBuffer();
+    return await exifr.parse(buf);
+  } catch { return null; }
+}
+
+let _lastTap = 0;
+
+async function loadItem(idx) {
+  const content = document.getElementById('lightbox-content');
+  const caption = document.getElementById('lightbox-caption');
+  content.innerHTML = '<div class="lightbox-spinner"><div class="spinner-border text-light"></div></div>';
+  caption.innerHTML = '';
+  caption.style.cursor = '';
+  caption.title = '';
+  caption.dataset.exif = '';
+  _lastTap = 0;
+
+  const file = allFiles[idx];
+
+  // Metadatos Dropbox (para GPS y fallback de fecha/dimensiones en vídeos)
+  let dbxMeta = null;
+  try {
+    const r = await dbxJSON('https://api.dropboxapi.com/2/files/get_metadata', {
+      path: file.path_lower, include_media_info: true
+    });
+    dbxMeta = r.media_info?.metadata || null;
+  } catch { /* sin metadatos Dropbox */ }
+
+  try {
+    if (isVideo(file)) {
+      // Vídeos: solo metadatos Dropbox, no EXIF
+      const poster = allThumbs[file.path_lower] || '';
+      if (poster) content.innerHTML = `<img class="lightbox-media" src="${poster}" alt="${file.name}">`;
+      const link = await getTempLink(file.path_lower);
+      content.innerHTML = `<video class="lightbox-media" controls autoplay playsinline preload="auto"${poster ? ` poster="${poster}"` : ''} src="${link}"></video>`;
+
+      const rows = buildExifHTML(null, dbxMeta, file.name);
+      setCaptionAndExif(file, dbxMeta, rows);
+    } else {
+      // Imágenes: miniatura + EXIF del fichero original en paralelo
+      const [src, exif] = await Promise.all([
+        getLargeThumb(file.path_lower),
+        fetchExifFromFile(file.path_lower)
+      ]);
+      content.innerHTML = `<img class="lightbox-media" src="${src}" alt="${file.name}">`;
+
+      const rows = buildExifHTML(exif, dbxMeta, file.name);
+      setCaptionAndExif(file, exif || dbxMeta, rows);
+    }
+  } catch {
+    content.innerHTML = `<p class="text-white text-center p-4">No se pudo cargar el archivo</p>`;
+  }
+}
+
+function setCaptionAndExif(file, meta, exifRows) {
+  const caption = document.getElementById('lightbox-caption');
+
+  // Fecha para caption: preferir EXIF DateTimeOriginal
+  const dateRaw = meta?.DateTimeOriginal || (meta?.time_taken ? new Date(meta.time_taken) : null);
+  const dateStr = dateRaw
+    ? (dateRaw instanceof Date ? dateRaw : new Date(dateRaw))
+        .toLocaleDateString('es-ES', { weekday:'long', day:'2-digit', month:'short', year:'numeric' })
+    : '';
+  const w = meta?.ImageWidth  || meta?.dimensions?.width;
+  const h = meta?.ImageHeight || meta?.dimensions?.height;
+  const resStr = w && h ? `${w} × ${h} px` : '';
+
+  const parts = [dateStr, resStr].filter(Boolean);
+  caption.innerHTML = parts.length
+    ? parts.map(s => `<span>${s}</span>`).join('<span style="opacity:.4"> · </span>')
+    : `<span style="opacity:.4">${file.name}</span>`;
+
+  caption.dataset.exif = exifRows.length ? JSON.stringify(exifRows) : '';
+  caption.style.cursor = exifRows.length ? 'pointer' : '';
+  caption.title = exifRows.length ? 'Doble tap para más datos' : '';
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  lb.classList.add('d-none');
+  document.getElementById('lightbox-content').innerHTML = '';
+  document.getElementById('lightbox-caption').textContent = '';
+  document.body.style.overflow = '';
+}
+
+function navLightbox(dir) {
+  currentIdx = (currentIdx + dir + allFiles.length) % allFiles.length;
+  loadItem(currentIdx);
+}
+
+// Doble tap en caption → overlay EXIF
+document.getElementById('lightbox-caption').addEventListener('click', () => {
+  const caption = document.getElementById('lightbox-caption');
+  const content = document.getElementById('lightbox-content');
+  const now = Date.now();
+  if (now - _lastTap < 320 && caption.dataset.exif) {
+    let exifEl = content.querySelector('.lightbox-exif');
+    if (!exifEl) {
+      exifEl = document.createElement('div');
+      exifEl.className = 'lightbox-exif exif-visible exif-active';
+      exifEl.innerHTML = JSON.parse(caption.dataset.exif).map(r => `<div class="exif-row">${r}</div>`).join('');
+      content.appendChild(exifEl);
+    } else {
+      exifEl.classList.toggle('exif-visible');
+      exifEl.classList.toggle('exif-active');
+    }
+  }
+  _lastTap = now;
+});
+
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+document.getElementById('lightbox-prev').addEventListener('click', () => navLightbox(-1));
+document.getElementById('lightbox-next').addEventListener('click', () => navLightbox(1));
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeLightbox();
+});
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lightbox').classList.contains('d-none')) return;
+  if (e.key === 'Escape')      closeLightbox();
+  if (e.key === 'ArrowLeft')   navLightbox(-1);
+  if (e.key === 'ArrowRight')  navLightbox(1);
+});
+
+// ─── Selección y descarga ────────────────────────────────────────────────────
+
+function enterSelectMode(idx) {
+  isSelectMode = true;
+  selectedFiles = new Set([idx]);
+  document.getElementById('gallery-grid').classList.add('selecting');
+  document.getElementById('group-selector').classList.add('d-none');
+  document.getElementById('select-all-bar').classList.remove('d-none');
+  document.getElementById('gallery-cancel-btn').classList.remove('d-none');
+  document.getElementById('gallery-download-btn').classList.remove('d-none');
+  if (canShare) document.getElementById('gallery-share-btn').classList.remove('d-none');
+  document.getElementById('gallery-upload-label').classList.add('d-none');
+  updateSelectUI();
+}
+
+function exitSelectMode() {
+  isSelectMode = false;
+  selectedFiles.clear();
+  document.getElementById('gallery-grid').classList.remove('selecting');
+  document.getElementById('group-selector').classList.remove('d-none');
+  document.getElementById('select-all-bar').classList.add('d-none');
+  document.getElementById('select-all-check').checked = false;
+  document.querySelectorAll('.gallery-item--selected').forEach(el => el.classList.remove('gallery-item--selected'));
+  document.getElementById('gallery-cancel-btn').classList.add('d-none');
+  const dlBtn = document.getElementById('gallery-download-btn');
+  dlBtn.classList.add('d-none');
+  dlBtn.disabled = true;
+  const shBtn = document.getElementById('gallery-share-btn');
+  shBtn.classList.add('d-none');
+  shBtn.disabled = true;
+  document.getElementById('gallery-upload-label').classList.remove('d-none');
+}
+
+function toggleSelect(idx) {
+  if (selectedFiles.has(idx)) selectedFiles.delete(idx);
+  else selectedFiles.add(idx);
+  updateSelectUI();
+}
+
+function updateSelectUI() {
+  document.querySelectorAll('.gallery-item[data-idx]').forEach(el => {
+    el.classList.toggle('gallery-item--selected', selectedFiles.has(parseInt(el.dataset.idx)));
+  });
+  document.getElementById('select-all-check').checked = selectedFiles.size === allFiles.length;
+  const n = selectedFiles.size;
+  const dlBtn = document.getElementById('gallery-download-btn');
+  dlBtn.disabled = n === 0;
+  document.getElementById('dl-count').textContent = n > 0 ? ` (${n})` : '';
+  const shBtn = document.getElementById('gallery-share-btn');
+  shBtn.disabled = n === 0;
+  document.getElementById('sh-count').textContent = n > 0 ? ` (${n})` : '';
+}
+
+document.querySelectorAll('.gallery-grp-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (btn.dataset.group === currentGroupBy) return;
+    currentGroupBy = btn.dataset.group;
+    document.querySelectorAll('.gallery-grp-btn').forEach(b => b.classList.toggle('active', b === btn));
+    if (allFiles.length === 0) return;
+    if (currentGroupBy === 'camera' && !cameraCache) {
+      document.getElementById('gallery-grid').classList.add('d-none');
+      document.getElementById('group-selector').classList.add('d-none');
+      document.querySelector('#gallery-status p').textContent = 'Leyendo datos de cámara…';
+      setStatus('show');
+      await buildCameraCache();
+    }
+    renderGrid(allFiles, allThumbs);
+  });
+});
+
+// Web Share API con ficheros (iOS Safari 15+, Android Chrome/Firefox 89+)
+// Firefox Android soporta navigator.share pero no implementa navigator.canShare → lo tratamos como compatible
+const canShare = !!(navigator.share && (
+  typeof navigator.canShare !== 'function' ||
+  navigator.canShare({ files: [new File([], 'test.jpg', { type: 'image/jpeg' })] })
+));
+
+document.getElementById('gallery-cancel-btn').addEventListener('click', exitSelectMode);
+document.getElementById('select-all-check').addEventListener('change', e => {
+  if (e.target.checked) allFiles.forEach((_, i) => selectedFiles.add(i));
+  else selectedFiles.clear();
+  updateSelectUI();
+});
+
+document.getElementById('gallery-share-btn').addEventListener('click', async () => {
+  const indices = [...selectedFiles].sort((a, b) => a - b);
+  const files   = indices.map(i => allFiles[i]);
+  const progress = document.getElementById('upload-progress');
+  const bar      = document.getElementById('upload-bar');
+  const label    = document.getElementById('upload-label');
+  progress.classList.remove('d-none');
+  bar.style.width = '0%';
+  spinStart(label, `Preparando ${files.length} archivo${files.length > 1 ? 's' : ''} para compartir…`);
+
+  const shareFiles = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const base = Math.round(100 * i / files.length);
+    spinText(`${file.name} — obteniendo enlace…`);
+    try {
+      const link = await getTempLink(file.path_lower);
+      const r = await fetch(link);
+      bar.style.width = `${base + Math.round(100 / files.length)}%`;
+      const blob = await r.blob();
+      const mime = isVideo(file) ? (blob.type || 'video/mp4') : (blob.type || 'image/jpeg');
+      shareFiles.push(new File([blob], file.name, { type: mime }));
+      spinText(`${file.name} — listo`);
+    } catch (err) {
+      spinStop();
+      progress.classList.add('d-none');
+      alert(`Error al preparar ${file.name}: ${err.message}`);
+      return;
+    }
+  }
+
+  spinStop();
+  progress.classList.add('d-none');
+
+  try {
+    await navigator.share({ files: shareFiles });
+  } catch (err) {
+    if (err.name !== 'AbortError') alert(`No se pudo compartir: ${err.message}`);
+  }
+});
+
+document.getElementById('gallery-download-btn').addEventListener('click', async () => {
+  const indices = [...selectedFiles].sort((a, b) => a - b);
+  const files   = indices.map(i => allFiles[i]);
+  const progress = document.getElementById('upload-progress');
+  const bar      = document.getElementById('upload-bar');
+  const label    = document.getElementById('upload-label');
+  progress.classList.remove('d-none');
+  bar.style.width = '0%';
+  spinStart(label, `Preparando descarga de ${files.length} archivo${files.length > 1 ? 's' : ''}…`);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const base  = Math.round((i / files.length) * 100);
+    const range = Math.round(100 / files.length);
+    spinText(`${file.name} (${fmtSize(file.size)}) ${files.length > 1 ? (i + 1) + '/' + files.length : ''}…`);
+    try {
+      spinText(`${file.name} — obteniendo enlace…`);
+      const link = await getTempLink(file.path_lower);
+      await downloadBlob(file.name, link, pct => {
+        bar.style.width = `${base + Math.round(pct * range / 100)}%`;
+        spinText(`${file.name} — ${pct}%`);
+      });
+    } catch (err) {
+      spinText(`${file.name} — Error: ${err.message}`);
+    }
+  }
+
+  spinStop();
+  bar.style.width = '100%';
+  label.textContent = '✓  Descarga completada';
+  setTimeout(() => {
+    progress.classList.add('d-none');
+    exitSelectMode();
+  }, 2000);
+});
+
+function downloadBlob(name, url, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.responseType = 'blob';
+    xhr.onprogress = ev => { if (ev.lengthComputable) onProgress(Math.round(ev.loaded / ev.total * 100)); };
+    xhr.onload = () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(xhr.response);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      resolve();
+    };
+    xhr.onerror = () => reject(new Error('Error de red'));
+    xhr.open('GET', url);
+    xhr.send();
+  });
+}
+
+// ─── Upload ──────────────────────────────────────────────────────────────────
+
+function fmtSize(bytes) {
+  return bytes < 1024 * 1024
+    ? Math.round(bytes / 1024) + ' KB'
+    : (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+const _spin = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+let _spinTimer = null, _spinIdx = 0, _spinLabel = null, _spinText = '';
+
+function spinStart(labelEl, text) {
+  _spinLabel = labelEl; _spinText = text; _spinIdx = 0;
+  _spinTimer = setInterval(() => {
+    _spinLabel.textContent = _spin[_spinIdx++ % _spin.length] + '  ' + _spinText;
+  }, 100);
+}
+function spinText(text)  { _spinText = text; }
+function spinStop()      { clearInterval(_spinTimer); _spinTimer = null; }
+
+document.getElementById('upload-input').addEventListener('change', async e => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  const progress = document.getElementById('upload-progress');
+  const bar      = document.getElementById('upload-bar');
+  const label    = document.getElementById('upload-label');
+  progress.classList.remove('d-none');
+  bar.style.width = '0%';
+  spinStart(label, `Preparando ${files.length === 1 ? files[0].name : files.length + ' archivos'}…`);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const base  = Math.round((i / files.length) * 100);
+    const range = Math.round(100 / files.length);
+    try {
+      await uploadFile(
+        file,
+        pct  => { bar.style.width = `${base + Math.round(pct * range / 100)}%`; },
+        text => { spinText(text); }
+      );
+    } catch (err) {
+      spinText(`${file.name} — Error: ${err.message}`);
+    }
+  }
+
+  spinStop();
+  bar.style.width = '100%';
+  label.textContent = '✓  ¡Subida completada! Actualizando galería…';
+  e.target.value = '';
+
+  setTimeout(async () => {
+    progress.classList.add('d-none');
+    document.getElementById('gallery-grid').classList.add('d-none');
+    setStatus('show');
+    token = await getAccessToken();
+    const newFiles = await listFolder();
+    allFiles = sortByDate(newFiles.filter(isMedia));
+    allThumbs = await batchThumbs(allFiles);
+    renderGrid(allFiles, allThumbs);
+  }, 1200);
+});
+
+function uploadSingle(file, destPath, onProgress, onStatus) {
+  return new Promise((resolve, reject) => {
+    onStatus(`${file.name} [${fmtSize(file.size)}] — subiendo…`);
+    const xhr = new XMLHttpRequest();
+    xhr.upload.onprogress = ev => {
+      if (ev.lengthComputable) {
+        const pct = Math.round(ev.loaded / ev.total * 100);
+        onProgress(pct);
+        onStatus(`${file.name} [${fmtSize(file.size)}] — ${pct}%`);
+      }
+    };
+    xhr.onload = () => {
+      const d = JSON.parse(xhr.responseText);
+      if (d.error_summary) reject(new Error(d.error_summary));
+      else resolve(d);
+    };
+    xhr.onerror = () => reject(new Error('Error de red'));
+    xhr.open('POST', 'https://content.dropboxapi.com/2/files/upload');
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    xhr.setRequestHeader('Dropbox-API-Arg', JSON.stringify({ path: destPath, mode: 'add', autorename: true, mute: false }));
+    xhr.send(file);
+  });
+}
+
+async function safeDestPath(name) {
+  const base = name.replace(/(\.[^.]+)$/, '');
+  const ext  = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
+  let candidate = DROPBOX.folder + '/' + name;
+  let n = 1;
+  while (true) {
+    const r = await dbxJSON('https://api.dropboxapi.com/2/files/get_metadata', { path: candidate });
+    if (r['.tag'] === 'file' || r['.tag'] === 'folder') {
+      candidate = `${DROPBOX.folder}/${base} (${n++})${ext}`;
+    } else {
+      return candidate;
+    }
+  }
+}
+
+async function uploadFile(file, onProgress, onStatus) {
+  onStatus(`${file.name} — comprobando nombre…`);
+  const destPath = await safeDestPath(file.name);
+  const renamed = destPath !== DROPBOX.folder + '/' + file.name;
+  if (renamed) onStatus(`${file.name} — duplicado, se guardará como "${destPath.split('/').pop()}"`);
+  if (file.size <= UPLOAD.chunkThreshold) {
+    await uploadSingle(file, destPath, onProgress, onStatus);
+    return;
+  }
+
+  // Subida por sesión para ficheros grandes
+  const PART = UPLOAD.partSize;
+  let offset = 0;
+  const totalParts = Math.ceil(file.size / PART);
+  let part = 0;
+
+  onStatus(`${file.name} [${fmtSize(file.size)} > 150 MB — troceamos en ${totalParts} chunks]`);
+  const startR = await fetch('https://content.dropboxapi.com/2/files/upload_session/start', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': JSON.stringify({ close: false })
+    },
+    body: file.slice(0, PART)
+  });
+  const { session_id } = await startR.json();
+  offset += PART;
+  onProgress(Math.round(++part / totalParts * 100));
+  onStatus(`${file.name} [chunk ${part}/${totalParts} enviado]`);
+
+  while (offset < file.size - PART) {
+    onStatus(`${file.name} [procesando chunk ${part + 1}/${totalParts}…]`);
+    await fetch('https://content.dropboxapi.com/2/files/upload_session/append_v2', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/octet-stream',
+        'Dropbox-API-Arg': JSON.stringify({ cursor: { session_id, offset }, close: false })
+      },
+      body: file.slice(offset, offset + PART)
+    });
+    offset += PART;
+    onProgress(Math.round(++part / totalParts * 100));
+    onStatus(`${file.name} [chunk ${part}/${totalParts} enviado]`);
+  }
+  onStatus(`${file.name} [finalizando sesión…]`);
+
+  const finishR = await fetch('https://content.dropboxapi.com/2/files/upload_session/finish', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': JSON.stringify({
+        cursor: { session_id, offset },
+        commit: { path: destPath, mode: 'add', autorename: true }
+      })
+    },
+    body: file.slice(offset)
+  });
+  const d = await finishR.json();
+  if (d.error_summary) throw new Error(d.error_summary);
+}
+
+// ─── Util ─────────────────────────────────────────────────────────────────────
+
+function setStatus(mode) {
+  document.getElementById('gallery-status').classList.toggle('d-none', mode === 'hide');
+}
+function showError(msg) {
+  setStatus('hide');
+  const el = document.getElementById('gallery-error');
+  el.textContent = msg;
+  el.classList.remove('d-none');
+}
+</script>

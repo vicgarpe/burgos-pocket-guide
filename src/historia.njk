@@ -1,0 +1,35 @@
+---
+layout: base.njk
+title: "Historia — Guía de Berlín"
+permalink: /historia/
+---
+
+<h2 class="module-title">Historia</h2>
+<p class="text-secondary mb-4">Fichas de contexto histórico para entender mejor lo que veréis.</p>
+
+<div class="row g-4">
+  {% for post in collections.historia %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <a href="{{ post.url | url }}" class="post-card-link d-block h-100 text-decoration-none text-reset">
+        <article class="card h-100 shadow-sm">
+          <div class="ratio ratio-16x9">
+            {% if post.data.hero %}
+              <img src="{{ post.data.hero | url }}" class="card-img-top object-fit-cover" alt="{{ post.data.alt or post.data.title }}" loading="lazy">
+            {% else %}
+              <img src="https://picsum.photos/800/500?{{ loop.index }}" class="card-img-top object-fit-cover" alt="Imagen" loading="lazy">
+            {% endif %}
+          </div>
+          <div class="card-body">
+            <h3 class="h5 card-title">{{ post.data.title }}</h3>
+            {% if post.data.excerpt %}
+              <p class="card-text text-secondary">{{ post.data.excerpt }}</p>
+            {% endif %}
+          </div>
+          <div class="card-footer bg-white small text-muted">Historia</div>
+        </article>
+      </a>
+    </div>
+  {% else %}
+    <p class="text-muted">Próximamente — las fichas de historia están en preparación.</p>
+  {% endfor %}
+</div>

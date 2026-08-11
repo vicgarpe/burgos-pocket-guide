@@ -1,0 +1,38 @@
+---
+layout: base.njk
+---
+<article class="row g-4 align-items-stretch">
+  {% if hero %}
+    <div class="col-12 col-lg-7">
+      <figure class="ratio ratio-16x9 d-block rounded overflow-hidden">
+        <img
+          src="{{ hero | url }}"
+          class="w-100 h-100"
+          style="object-fit:cover"
+          alt="{{ alt or title }}"
+          loading="lazy"
+        >
+      </figure>
+    </div>
+  {% endif %}
+
+  <div class="col-12 col-lg-5 d-flex">
+    <div class="d-flex flex-column">
+      <h2 class="post-title lh-sm">{{ title }}</h2>
+      {% if excerpt %}
+        <p class="text-secondary lead">{{ excerpt }}</p>
+      {% endif %}
+      <div class="mt-auto small text-muted">
+        {% if modulo %}
+          <span class="module-badge">{{ modulo }}</span>
+        {% else %}
+          {{ page.date | formatDateFull('es-ES') }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</article>
+
+<div class="mt-4 content">
+  {{ content | safe }}
+</div>

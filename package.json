@@ -1,0 +1,15 @@
+{
+    "name": "berlin-poket-guide",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "eleventy --input=src && node scripts/encrypt-galeria.mjs && node scripts/encrypt-traductor.mjs",
+        "serve": "eleventy --serve --watch --input=src",
+        "clean": "rm -rf _site"
+    },
+    "devDependencies": {
+        "@11ty/eleventy": "^3.1.2",
+        "dotenv": "^17.3.1"
+    }
+}

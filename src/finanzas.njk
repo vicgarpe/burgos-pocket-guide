@@ -1,0 +1,423 @@
+---
+layout: base.njk
+title: "Finanzas — Guía de Berlín"
+permalink: /finanzas/index.html
+---
+
+{% gate %}
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="module-title mb-0">Finanzas</h2>
+    <button class="fin-reload-btn" onclick="loadData()" title="Recargar datos" aria-label="Recargar">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg>
+    </button>
+  </div>
+
+  {# ── Loading ─────────────────────────────────────────────────── #}
+  <div id="fin-loading" class="d-none text-center py-4">
+    <div class="spinner-border text-secondary" role="status" style="width:1.75rem;height:1.75rem"></div>
+    <p class="mt-2 text-muted small">Cargando datos…</p>
+  </div>
+
+  {# ── Error ───────────────────────────────────────────────────── #}
+  <div id="fin-error" class="d-none" role="alert"
+    style="border:1px solid var(--rule);background:#fff9f7;color:#7a3523;border-radius:.65rem;padding:1rem;font-family:var(--font-sans);font-size:.9rem"></div>
+
+  {# ── Content ─────────────────────────────────────────────────── #}
+  <div id="fin-content" class="d-none">
+
+    {# Balance section #}
+    <div class="fin-balance-section mb-4">
+      <p class="fin-section-label">Balance actual</p>
+      <div id="fin-balance-list"></div>
+    </div>
+
+    {# Tabs #}
+    <ul class="nav nav-tabs fin-tabs mb-3" id="fin-tab-nav" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-gastos-btn" data-bs-toggle="tab" data-bs-target="#tab-gastos" type="button" role="tab">Movimientos</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-nuevo-btn" data-bs-toggle="tab" data-bs-target="#tab-nuevo" type="button" role="tab">Pago</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-pagar-btn" data-bs-toggle="tab" data-bs-target="#tab-pagar" type="button" role="tab">Cancelación</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+
+      {# ── Tab Gastos ─────────────────────────────────────────── #}
+      <div class="tab-pane fade show active" id="tab-gastos" role="tabpanel">
+        <div id="fin-gastos-list"></div>
+      </div>
+
+      {# ── Tab Añadir gasto ───────────────────────────────────── #}
+      <div class="tab-pane fade" id="tab-nuevo" role="tabpanel">
+
+        {# OCR #}
+        <div class="fin-ocr-area mb-3">
+          <label class="fin-ocr-label" for="ocr-input">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+              <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
+            </svg>
+            Escanear ticket
+          </label>
+          <input type="file" id="ocr-input" accept="image/*" capture="environment" class="d-none">
+          <img id="ocr-preview" class="fin-ocr-preview d-none" alt="Vista previa del ticket">
+          <p id="ocr-status" class="fin-ocr-status d-none"></p>
+        </div>
+
+        {# Formulario #}
+        <div class="mb-2">
+          <input type="text" id="gasto-desc" class="trad-input-contexto" placeholder="Descripción (p.ej. Supermercado Lidl)">
+        </div>
+        <div class="d-flex gap-2 mb-2">
+          <input type="number" id="gasto-importe" class="trad-input-contexto" placeholder="Importe (€)" step="0.01" min="0" style="flex:1">
+          <input type="date" id="gasto-fecha" class="trad-input-contexto" style="flex:1">
+        </div>
+
+        <p class="fin-form-label mt-3 mb-1">¿Quién paga?</p>
+        <div class="btn-group w-100 fin-segmented mb-3" role="group" aria-label="Pagador">
+          <input type="radio" class="btn-check" name="pagador" id="pag-tv" value="TV" autocomplete="off" checked>
+          <label class="btn fin-seg-btn" for="pag-tv">TV</label>
+          <input type="radio" class="btn-check" name="pagador" id="pag-md" value="MD" autocomplete="off">
+          <label class="btn fin-seg-btn" for="pag-md">MD</label>
+          <input type="radio" class="btn-check" name="pagador" id="pag-ym" value="YM" autocomplete="off">
+          <label class="btn fin-seg-btn" for="pag-ym">YM</label>
+        </div>
+
+        <p class="fin-form-label mb-1">¿Quiénes participan?</p>
+        <div class="d-flex gap-3 mb-3">
+          <label class="fin-check-label"><input type="checkbox" name="partic" value="TV" checked> TV</label>
+          <label class="fin-check-label"><input type="checkbox" name="partic" value="MD" checked> MD</label>
+          <label class="fin-check-label"><input type="checkbox" name="partic" value="YM" checked> YM</label>
+        </div>
+
+        <button class="gallery-upload-btn" id="btn-submit-gasto" onclick="submitGasto()" style="width:100%;justify-content:center;font-size:.95rem;padding:.7rem 1rem">
+          Añadir gasto
+        </button>
+      </div>
+
+      {# ── Tab Pagar ──────────────────────────────────────────── #}
+      <div class="tab-pane fade" id="tab-pagar" role="tabpanel">
+        <p class="fin-form-label mb-1">¿Quién paga?</p>
+        <select id="canc-de" class="trad-input-contexto mb-2">
+          <option value="TV">TV</option>
+          <option value="MD">MD</option>
+          <option value="YM">YM</option>
+        </select>
+
+        <p class="fin-form-label mb-1">¿A quién?</p>
+        <select id="canc-a" class="trad-input-contexto mb-2">
+          <option value="TV">TV</option>
+          <option value="MD" selected>MD</option>
+          <option value="YM">YM</option>
+        </select>
+
+        <div class="mb-2">
+          <input type="number" id="canc-importe" class="trad-input-contexto" placeholder="Importe (€)" step="0.01" min="0">
+        </div>
+        <div class="mb-3">
+          <input type="text" id="canc-desc" class="trad-input-contexto" placeholder="Concepto (opcional, p.ej. Bizum)">
+        </div>
+
+        <button class="gallery-upload-btn" id="btn-submit-canc" onclick="submitCancelacion()" style="width:100%;justify-content:center;font-size:.95rem;padding:.7rem 1rem">
+          Registrar pago
+        </button>
+      </div>
+
+    </div>{# /tab-content #}
+  </div>{# /fin-content #}
+{% endgate %}
+
+<script>
+const WORKER  = 'https://mariano-traductor.victor-garcia-penyas.workers.dev';
+const TOKEN   = '{{ workerToken }}';
+const HDR     = { 'x-api-token': TOKEN };
+const PAREJAS = ['TV', 'MD', 'YM'];
+
+let state = { gastos: [], cancelaciones: [] };
+
+// ── Data ──────────────────────────────────────────────────────────
+async function loadData() {
+  show('fin-loading');
+  hide('fin-error');
+  hide('fin-content');
+  try {
+    const r = await fetch(WORKER + '/finanzas', { headers: HDR });
+    if (!r.ok) throw new Error('Error ' + r.status);
+    state = await r.json();
+    renderAll();
+    show('fin-content');
+  } catch(e) {
+    showError(e.message || 'Error de red.');
+  } finally {
+    hide('fin-loading');
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function renderAll() {
+  renderBalances();
+  renderMovimientos();
+}
+
+function renderBalances() {
+  // Construir matriz de deuda bruta
+  var raw = {};
+  PAREJAS.forEach(function(p) { raw[p] = { TV: 0, MD: 0, YM: 0 }; });
+
+  (state.gastos || []).forEach(function(g) {
+    if (!raw[g.pagador]) return;
+    var share = g.importe / g.participantes.length;
+    g.participantes.forEach(function(p) {
+      if (!raw[p]) return;
+      if (p !== g.pagador) raw[p][g.pagador] += share;
+    });
+  });
+
+  (state.cancelaciones || []).forEach(function(c) {
+    if (!raw[c.de] || !raw[c.a]) return;
+    raw[c.de][c.a] -= c.importe;
+    if (raw[c.de][c.a] < 0) {
+      raw[c.a][c.de] += -raw[c.de][c.a];
+      raw[c.de][c.a] = 0;
+    }
+  });
+
+  // 3 filas: una por cada par central
+  var order = [
+    { center: 'TV', left: 'MD', right: 'YM' },
+    { center: 'MD', left: 'TV', right: 'YM' },
+    { center: 'YM', left: 'TV', right: 'MD' }
+  ];
+
+  var el = document.getElementById('fin-balance-list');
+  el.innerHTML = order.map(function(r) {
+    // net > 0 → el lateral debe al centro; net < 0 → el centro debe al lateral
+    var lNet = (raw[r.left][r.center] || 0) - (raw[r.center][r.left] || 0);
+    var rNet = (raw[r.right][r.center] || 0) - (raw[r.center][r.right] || 0);
+    return balRowHTML(r.center, r.left, lNet, r.right, rNet);
+  }).join('');
+}
+
+function balRowHTML(center, left, lNet, right, rNet) {
+  var ICON_TRASH = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>';
+  // Segmento izquierdo: lNet>0 → left debe centro (→), lNet<0 → centro debe left (←)
+  function seg(net, dir) {
+    var abs = Math.abs(net);
+    if (abs < 0.01) return '<span class="fin-bal-seg"><span class="fin-bal-ok">✓</span></span>';
+    var amtHtml = '<span class="fin-bal-amt">' + fmt(abs) + '</span>';
+    var active = ' fin-bal-active';
+    // dir='L': flecha apunta → cuando left debe centro, ← cuando centro debe left
+    // dir='R': flecha apunta ← cuando right debe centro, → cuando centro debe right
+    if (dir === 'L') {
+      return net > 0
+        ? '<span class="fin-bal-seg' + active + '">' + amtHtml + ' <span class="fin-bal-arrow">→</span></span>'
+        : '<span class="fin-bal-seg' + active + '"><span class="fin-bal-arrow">←</span> ' + amtHtml + '</span>';
+    } else {
+      return net > 0
+        ? '<span class="fin-bal-seg' + active + '"><span class="fin-bal-arrow">←</span> ' + amtHtml + '</span>'
+        : '<span class="fin-bal-seg' + active + '">' + amtHtml + ' <span class="fin-bal-arrow">→</span></span>';
+    }
+  }
+  return '<div class="fin-bal-row">' +
+    '<span class="fin-bal-pair">' + left + '</span>' +
+    seg(lNet, 'L') +
+    '<span class="fin-bal-pair fin-bal-center">' + center + '</span>' +
+    seg(rNet, 'R') +
+    '<span class="fin-bal-pair">' + right + '</span>' +
+    '</div>';
+}
+
+function renderMovimientos() {
+  var el = document.getElementById('fin-gastos-list');
+  var gastos = (state.gastos || []).map(function(g) { return { tipo: 'gasto', fecha: g.fecha, data: g }; });
+  var cancs  = (state.cancelaciones || []).map(function(c) { return { tipo: 'cancelacion', fecha: c.fecha, data: c }; });
+  var todos  = gastos.concat(cancs).sort(function(a, b) { return b.fecha.localeCompare(a.fecha); });
+
+  if (!todos.length) {
+    el.innerHTML = '<p class="text-muted small py-3">Sin movimientos todavía.</p>';
+    return;
+  }
+  var trash = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>';
+
+  el.innerHTML = todos.map(function(m) {
+    var d = m.data;
+    if (m.tipo === 'gasto') {
+      return '<div class="fin-gasto-item d-flex justify-content-between align-items-start">' +
+        '<div>' +
+          '<div class="fin-gasto-desc">' + esc(d.descripcion) + '</div>' +
+          '<div class="fin-gasto-meta">' +
+            d.fecha + ' · Paga ' + d.pagador + ' · ' + fmt(d.importe) +
+            ' <span class="fin-parts">[' + d.participantes.join(', ') + ']</span>' +
+          '</div>' +
+        '</div>' +
+        '<button class="fin-del-btn" onclick="deleteGasto(\'' + d.id + '\')" title="Eliminar" aria-label="Eliminar gasto">' + trash + '</button>' +
+        '</div>';
+    } else {
+      var desc = d.descripcion ? ' · ' + esc(d.descripcion) : '';
+      return '<div class="fin-gasto-item d-flex justify-content-between align-items-start">' +
+        '<div>' +
+          '<div class="fin-gasto-desc" style="color:var(--muted);font-style:italic">Cancelación de deuda</div>' +
+          '<div class="fin-gasto-meta">' +
+            d.fecha + ' · ' + d.de + ' → ' + d.a + ' · ' + fmt(d.importe) + desc +
+          '</div>' +
+        '</div>' +
+        '<button class="fin-del-btn" onclick="deleteCancelacion(\'' + d.id + '\')" title="Eliminar" aria-label="Eliminar cancelación">' + trash + '</button>' +
+        '</div>';
+    }
+  }).join('');
+}
+
+// ── Add gasto ─────────────────────────────────────────────────────
+async function submitGasto() {
+  var desc   = document.getElementById('gasto-desc').value.trim();
+  var imp    = parseFloat(document.getElementById('gasto-importe').value);
+  var fecha  = document.getElementById('gasto-fecha').value;
+  var pagador = document.querySelector('input[name="pagador"]:checked').value;
+  var partic  = Array.from(document.querySelectorAll('input[name="partic"]:checked')).map(function(c) { return c.value; });
+
+  if (!desc)           return alert('Descripción requerida.');
+  if (!imp || imp <= 0) return alert('Importe inválido.');
+  if (partic.length < 2) return alert('Selecciona al menos 2 participantes.');
+  if (partic.indexOf(pagador) === -1) return alert('El pagador debe estar en los participantes.');
+
+  var btn = document.getElementById('btn-submit-gasto');
+  btn.disabled = true;
+  try {
+    var body = { descripcion: desc, importe: imp, pagador: pagador, participantes: partic };
+    if (fecha) body.fecha = fecha;
+    var r = await fetch(WORKER + '/finanzas/gasto', {
+      method: 'POST',
+      headers: Object.assign({}, HDR, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(body)
+    });
+    var data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Error ' + r.status);
+    resetGastoForm();
+    await loadData();
+    bootstrap.Tab.getOrCreateInstance(document.getElementById('tab-gastos-btn')).show();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteGasto(id) {
+  if (!confirm('¿Eliminar este pago?')) return;
+  try {
+    var r = await fetch(WORKER + '/finanzas/gasto/' + id, { method: 'DELETE', headers: HDR });
+    var data = await r.json();
+    if (!r.ok || !data.success) throw new Error(data.error || 'Error');
+    await loadData();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function deleteCancelacion(id) {
+  if (!confirm('¿Eliminar esta cancelación?')) return;
+  try {
+    var r = await fetch(WORKER + '/finanzas/cancelacion/' + id, { method: 'DELETE', headers: HDR });
+    var data = await r.json();
+    if (!r.ok || !data.success) throw new Error(data.error || 'Error');
+    await loadData();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+// ── OCR ───────────────────────────────────────────────────────────
+document.getElementById('ocr-input').addEventListener('change', async function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+
+  var preview = document.getElementById('ocr-preview');
+  preview.src = URL.createObjectURL(file);
+  preview.classList.remove('d-none');
+
+  var ocrStatus = document.getElementById('ocr-status');
+  ocrStatus.textContent = 'Analizando ticket…';
+  ocrStatus.classList.remove('d-none');
+  ocrStatus.style.color = 'var(--muted)';
+
+  try {
+    var fd = new FormData();
+    fd.append('imagen', file);
+    var r = await fetch(WORKER + '/finanzas/ocr', { method: 'POST', headers: HDR, body: fd });
+    var data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Error OCR');
+
+    if (data.descripcion) document.getElementById('gasto-desc').value = data.descripcion;
+    if (data.importe)     document.getElementById('gasto-importe').value = data.importe;
+    if (data.fecha)       document.getElementById('gasto-fecha').value = data.fecha;
+
+    ocrStatus.textContent = data.confiabilidad_ocr || 'Ticket analizado.';
+  } catch(e) {
+    ocrStatus.textContent = 'No se pudo leer el ticket: ' + e.message;
+    ocrStatus.style.color = '#7a3523';
+  }
+});
+
+// ── Cancelacion ───────────────────────────────────────────────────
+async function submitCancelacion() {
+  var de  = document.getElementById('canc-de').value;
+  var a   = document.getElementById('canc-a').value;
+  var imp = parseFloat(document.getElementById('canc-importe').value);
+  var desc = document.getElementById('canc-desc').value.trim();
+
+  if (de === a)          return alert('El pagador y el receptor deben ser distintos.');
+  if (!imp || imp <= 0)  return alert('Importe inválido.');
+
+  var btn = document.getElementById('btn-submit-canc');
+  btn.disabled = true;
+  try {
+    var body = { de: de, a: a, importe: imp };
+    if (desc) body.descripcion = desc;
+    var r = await fetch(WORKER + '/finanzas/cancelacion', {
+      method: 'POST',
+      headers: Object.assign({}, HDR, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(body)
+    });
+    var data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Error ' + r.status);
+    document.getElementById('canc-importe').value = '';
+    document.getElementById('canc-desc').value = '';
+    await loadData();
+    bootstrap.Tab.getOrCreateInstance(document.getElementById('tab-gastos-btn')).show();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Utils ─────────────────────────────────────────────────────────
+function fmt(n)  { return n.toFixed(2).replace('.', ',') + ' €'; }
+function esc(s)  { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function show(id){ document.getElementById(id).classList.remove('d-none'); }
+function hide(id){ document.getElementById(id).classList.add('d-none'); }
+function showError(msg) { var el = document.getElementById('fin-error'); el.textContent = msg; show('fin-error'); }
+
+function resetGastoForm() {
+  document.getElementById('gasto-desc').value    = '';
+  document.getElementById('gasto-importe').value = '';
+  document.getElementById('ocr-preview').classList.add('d-none');
+  document.getElementById('ocr-status').classList.add('d-none');
+  document.getElementById('ocr-input').value = '';
+  // Reset fecha to today
+  document.getElementById('gasto-fecha').value =
+    new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+document.getElementById('gasto-fecha').value =
+  new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+
+document.addEventListener('viaje:authed',    loadData);
+document.addEventListener('viaje:unlocked',  loadData);
+</script>
