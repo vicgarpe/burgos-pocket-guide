@@ -6,29 +6,26 @@ permalink: "/index.html"
 
 {# Hero #}
 <section class="mb-4">
-  <div class="position-relative rounded overflow-hidden">
+  <div class="position-relative rounded overflow-hidden hero-frame">
     {#
-      Hero con art direction: en móvil un recorte vertical 4:5 (la franja 16:9
-      quedaba muy estrecha en pantalla de teléfono), en el resto el 16:9 ancho.
+      Hero en formato póster 4:5: la misma imagen y el mismo encuadre en móvil
+      (a ancho completo) y en escritorio (centrado, limitado por .hero-frame).
+      La master es vertical, así que no hay ningún recorte 16:9 que contenga a
+      la vez las torres de la Catedral y al grupo entero.
       Variantes generadas con:
-        src/images/make-hero-variants.sh src/images-master/burgos.png --out src/images
-        src/images/make-hero-variants.sh src/images-master/burgos.png --out src/images \
-          --ratio 4:5 --widths "400 600 900" --name burgos-vert
-      El alto lo fija .hero-img en styles.css, que cambia de ratio en el mismo breakpoint.
+        src/images/make-hero-variants.sh src/images-master/burgos-vert.png \
+          --out src/images --ratio 4:5 --widths "400 600 900" --name burgos-vert
     #}
     <picture>
-      <source media="(max-width: 576px)" type="image/avif" srcset="{{ '/images/burgos-vert-400.avif' | url }} 400w, {{ '/images/burgos-vert-600.avif' | url }} 600w, {{ '/images/burgos-vert-900.avif' | url }} 900w" sizes="100vw">
-      <source media="(max-width: 576px)" type="image/webp" srcset="{{ '/images/burgos-vert-400.webp' | url }} 400w, {{ '/images/burgos-vert-600.webp' | url }} 600w, {{ '/images/burgos-vert-900.webp' | url }} 900w" sizes="100vw">
-      <source media="(max-width: 576px)" type="image/jpeg" srcset="{{ '/images/burgos-vert-400.jpg' | url }} 400w, {{ '/images/burgos-vert-600.jpg' | url }} 600w, {{ '/images/burgos-vert-900.jpg' | url }} 900w" sizes="100vw">
-      <source type="image/avif" srcset="{{ '/images/burgos-800.avif' | url }} 800w, {{ '/images/burgos-1200.avif' | url }} 1200w, {{ '/images/burgos-1600.avif' | url }} 1600w" sizes="960px">
-      <source type="image/webp" srcset="{{ '/images/burgos-800.webp' | url }} 800w, {{ '/images/burgos-1200.webp' | url }} 1200w, {{ '/images/burgos-1600.webp' | url }} 1600w" sizes="960px">
+      <source type="image/avif" srcset="{{ '/images/burgos-vert-400.avif' | url }} 400w, {{ '/images/burgos-vert-600.avif' | url }} 600w, {{ '/images/burgos-vert-900.avif' | url }} 900w" sizes="(max-width: 576px) 100vw, 480px">
+      <source type="image/webp" srcset="{{ '/images/burgos-vert-400.webp' | url }} 400w, {{ '/images/burgos-vert-600.webp' | url }} 600w, {{ '/images/burgos-vert-900.webp' | url }} 900w" sizes="(max-width: 576px) 100vw, 480px">
       <img
-        src="{{ '/images/burgos-1200.jpg' | url }}"
-        srcset="{{ '/images/burgos-800.jpg' | url }} 800w, {{ '/images/burgos-1200.jpg' | url }} 1200w, {{ '/images/burgos-1600.jpg' | url }} 1600w"
-        sizes="960px"
+        src="{{ '/images/burgos-vert-600.jpg' | url }}"
+        srcset="{{ '/images/burgos-vert-400.jpg' | url }} 400w, {{ '/images/burgos-vert-600.jpg' | url }} 600w, {{ '/images/burgos-vert-900.jpg' | url }} 900w"
+        sizes="(max-width: 576px) 100vw, 480px"
         alt="El grupo con las maletas junto al coche en una calle empedrada, con la Catedral de Burgos y los tejados del casco antiguo al atardecer"
         class="w-100 d-block hero-img"
-        width="1600" height="900"
+        width="900" height="1125"
         fetchpriority="high"
       >
     </picture>

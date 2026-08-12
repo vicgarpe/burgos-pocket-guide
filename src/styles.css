@@ -103,15 +103,18 @@ a:hover{
 }
 
 /* Hero de portada */
+/* Póster 4:5: a ancho completo en móvil y centrado con tope en pantallas
+   grandes, para que no se coma la pantalla. El tope también mantiene la
+   imagen nítida: la fuente de 900px cubre ~1,9x sobre 480px. */
+.hero-frame{
+  max-width: 480px;
+  margin-inline: auto;
+}
 .hero-img{
   width:100%;
   height:auto;              /* anula el alto del atributo: manda el aspect-ratio */
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
-}
-@media (max-width: 576px){
-  /* En móvil se sirve el recorte vertical: la franja 16:9 quedaba muy estrecha */
-  .hero-img{ aspect-ratio: 4 / 5; }
 }
 
 .hero-caption{
