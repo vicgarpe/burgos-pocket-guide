@@ -103,6 +103,17 @@ a:hover{
 }
 
 /* Hero de portada */
+.hero-img{
+  width:100%;
+  height:auto;              /* anula el alto del atributo: manda el aspect-ratio */
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+@media (max-width: 576px){
+  /* En móvil se sirve el recorte vertical: la franja 16:9 quedaba muy estrecha */
+  .hero-img{ aspect-ratio: 4 / 5; }
+}
+
 .hero-caption{
   position:absolute;
   left:0; bottom:0;
