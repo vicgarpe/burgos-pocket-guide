@@ -1,5 +1,5 @@
 import 'dotenv/config';
-const PATH_PREFIX = "/berlin-poket-guide/";
+const PATH_PREFIX = "/burgos-pocket-guide/";
 
 export default function(eleventyConfig) {
   // --- Passthrough de estáticos ---
