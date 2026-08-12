@@ -1,5 +1,9 @@
 node_modules/
 _site/
 
+# Originales pesados de las fotos (másters). Las variantes publicables
+# se generan en src/images/ con src/images/make-hero-variants.sh
+src/images-master/
+
 .env
 prompts/20-secretos-dropbox.md

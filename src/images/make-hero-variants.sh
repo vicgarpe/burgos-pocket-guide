@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Uso: ./make-hero-variants.sh imagen.jpg [--offset_x n] [--offset_y n]
+# Uso: ./make-hero-variants.sh imagen.jpg [--offset_x n] [--offset_y n] [--out dir]
+#
+# Los originales pesados viven en src/images-master/ (fuera de git y del build);
+# las variantes se publican en src/images/. Ejemplo:
+#   src/images/make-hero-variants.sh src/images-master/burgos.png --out src/images
 #
 # Recorta la imagen al ratio 16:9 centrado (el rectángulo más grande posible),
 # aplica los offsets indicados y clampea para no salirse de los bordes.
@@ -8,33 +12,42 @@ set -euo pipefail
 
 OFFSET_X=0
 OFFSET_Y=0
+OUT_DIR=""
 POSITIONAL=()
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --offset_x) OFFSET_X="$2"; shift 2 ;;
     --offset_y) OFFSET_Y="$2"; shift 2 ;;
+    --out|-o)   OUT_DIR="$2";  shift 2 ;;
     *) POSITIONAL+=("$1"); shift ;;
   esac
 done
 
 if [ ${#POSITIONAL[@]} -lt 1 ]; then
-  echo "Uso: $0 ruta/imagen.jpg [--offset_x n] [--offset_y n]"
+  echo "Uso: $0 ruta/imagen.jpg [--offset_x n] [--offset_y n] [--out dir]"
   echo "  --offset_x  desplaza el recorte horizontalmente (px, puede ser negativo)"
   echo "  --offset_y  desplaza el recorte verticalmente   (px, puede ser negativo)"
+  echo "  --out       carpeta donde escribir las variantes (por defecto, la del original)"
   exit 1
 fi
 
-ORIG="${POSITIONAL[0]}"
-BASE_DIR="$(dirname "$ORIG")"
+ORIG="$(cd "$(dirname "${POSITIONAL[0]}")" && pwd)/$(basename "${POSITIONAL[0]}")"
 BASE_NAME="$(basename "$ORIG")"
 STEM="${BASE_NAME%.*}"
 
-cd "$BASE_DIR"
+if [ -n "$OUT_DIR" ]; then
+  mkdir -p "$OUT_DIR"
+  OUT_DIR="$(cd "$OUT_DIR" && pwd)"
+else
+  OUT_DIR="$(dirname "$ORIG")"
+fi
+
+cd "$OUT_DIR"
 
 # Dimensiones originales
-W_ORIG=$(identify -format "%w" "$BASE_NAME")
-H_ORIG=$(identify -format "%h" "$BASE_NAME")
+W_ORIG=$(identify -format "%w" "$ORIG")
+H_ORIG=$(identify -format "%h" "$ORIG")
 echo "Original: ${W_ORIG}x${H_ORIG}"
 
 # Calcular crop 16:9 con offsets y clamping
@@ -67,7 +80,7 @@ echo "Recorte 16:9: ${CROP_W}x${CROP_H} desde +${X0}+${Y0}"
 
 # Imagen recortada temporal
 TMP="${STEM}-tmp-crop.jpg"
-convert "$BASE_NAME" -crop "${CROP_W}x${CROP_H}+${X0}+${Y0}" +repage "$TMP"
+convert "$ORIG" -crop "${CROP_W}x${CROP_H}+${X0}+${Y0}" +repage "$TMP"
 
 for W in 800 1200 1600; do
   echo "  → ${W}px..."

@@ -2,18 +2,19 @@
 layout: post.njk
 title: "Día # — TITULO"
 excerpt: "Pequeña descripción de la actividad"
-lugar: "Berlín"
-hero: "/images/kreuzberg-1200.jpg"   # 👈 Esta imagen será el hero del post y la miniatura en portada
+lugar: "Burgos"
+hero: "/images/nombre-800.jpg"   # 👈 Esta imagen será el hero del post y la miniatura en portada
 alt: "describe la imagen"
 # (opcional) para usar shortcodes Nunjucks dentro del Markdown:
 templateEngineOverride: njk,md
+permalink: /posts/{{ page.fileSlug }}/
 ---
 
 ## Qué ver
-- East Side Gallery
-- Maybachufer
+- Catedral de Santa María
+- Mirador del Castillo
 
-![Paseo por el canal](/images/canal-berlin-1200.jpg)
+![Paseo por el Espolón](/images/nombre-1200.jpg)
 
 ## Reservas necesarias
 Todas las reservas y enlaces necesarios.
@@ -21,16 +22,16 @@ Todas las reservas y enlaces necesarios.
 ## En el lugar
 
 ### Dónde comer
-- [Mustafa's Gemüse Kebap](https://ejemplo.com) — cola, pero merece la pena.
+- [Nombre del sitio](https://ejemplo.com) — nota breve.
 
 ### Cómo llegar
-- U1 / U8 → Görlitzer Bahnhof.
+- A pie desde el casco histórico / coche.
 
-Para poner los enlaces a gmpas hacemos esto
+Para poner los enlaces a gmaps hacemos esto
 
-{% gmap "Mustafa's Gemüse Kebap, Berlin", "Kebap en Maps" %}
+{% gmap "Catedral de Burgos", "Catedral en Maps" %}
 
-{% gcoords 52.5006, 13.4410, "Canal en Maps" %}
+{% gcoords 42.3409, -3.7044, "Catedral — GPS" %}
 
 ## Un poco de historia
-Marco historico del emplazamiento.
+Marco histórico del emplazamiento.

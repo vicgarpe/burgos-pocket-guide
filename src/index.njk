@@ -1,26 +1,28 @@
 ---
 layout: base.njk
-title: "Guía de Berlín"
+title: "Guía de Burgos"
 permalink: "/index.html"
 ---
 
 {# Hero #}
 <section class="mb-4">
   <div class="position-relative rounded overflow-hidden">
+    {# Variantes: src/images/make-hero-variants.sh src/images-master/burgos.png --out src/images #}
     <picture>
-      <source type="image/avif" srcset="{{ '/images/berlin-hero-800.avif' | url }} 800w, {{ '/images/berlin-hero-1200.avif' | url }} 1200w, {{ '/images/berlin-hero-1600.avif' | url }} 1600w">
-      <source type="image/webp" srcset="{{ '/images/berlin-hero-800.webp' | url }} 800w, {{ '/images/berlin-hero-1200.webp' | url }} 1200w, {{ '/images/berlin-hero-1600.webp' | url }} 1600w">
+      <source type="image/avif" srcset="{{ '/images/burgos-800.avif' | url }} 800w, {{ '/images/burgos-1200.avif' | url }} 1200w, {{ '/images/burgos-1600.avif' | url }} 1600w" sizes="(max-width: 576px) 100vw, 960px">
+      <source type="image/webp" srcset="{{ '/images/burgos-800.webp' | url }} 800w, {{ '/images/burgos-1200.webp' | url }} 1200w, {{ '/images/burgos-1600.webp' | url }} 1600w" sizes="(max-width: 576px) 100vw, 960px">
       <img
-        src="{{ '/images/berlin-hero-1200.jpg' | url }}"
-        srcset="{{ '/images/berlin-hero-800.jpg' | url }} 800w, {{ '/images/berlin-hero-1200.jpg' | url }} 1200w, {{ '/images/berlin-hero-1600.jpg' | url }} 1600w"
+        src="{{ '/images/burgos-1200.jpg' | url }}"
+        srcset="{{ '/images/burgos-800.jpg' | url }} 800w, {{ '/images/burgos-1200.jpg' | url }} 1200w, {{ '/images/burgos-1600.jpg' | url }} 1600w"
         sizes="(max-width: 576px) 100vw, 960px"
-        alt="Panorámica de Berlín"
+        alt="Vista de la Catedral de Burgos y los tejados del casco antiguo desde una calle en cuesta"
         class="w-100 d-block"
-        loading="lazy"
+        width="1600" height="900"
+        fetchpriority="high"
       >
     </picture>
     <div class="hero-caption">
-      Berlín en 3 días: barrios, rutas y sitios clave sin perder tiempo.
+      Burgos en 3 días: casco histórico, Atapuerca y vuelta sin prisa.
     </div>
   </div>
 </section>

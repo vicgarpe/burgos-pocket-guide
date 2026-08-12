@@ -2,9 +2,10 @@
 tags: portada
 permalink: false
 ---
-Viaje de **3 días** a Berlín con base en **Alexanderplatz** y ritmo tranquilo. Seis personas, tres noches, itinerario abierto.
+Viaje de **3 días** a Burgos, con alojamiento en **Fernán González** (pleno casco histórico) y ritmo tranquilo: la Catedral y el Castillo a la puerta, un día completo en Atapuerca y vuelta a casa sin prisa.
 
-**Miércoles 18** — llegada nocturna al hotel, check-in y primer paseo por Alexanderplatz.
-**Jueves 19** — East Side Gallery, Tränenpalast y free tour "Berlín Monumental".
-**Viernes 20** — excursión a Sachsenhausen con guía en español (4 personas) y tarde relajada por Mitte.
-**Sábado 21** — mañana suave, compras y preparar la salida de madrugada hacia BER (vuelo domingo 22 a las 06:00).
+**Martes 18** — llegada y check-in, comida por San Lorenzo, Mirador del Castillo, Catedral y Espolón.
+**Miércoles 19** — día completo en los **yacimientos de Atapuerca** (visita guiada), CAREX y/o Museo de la Evolución Humana.
+**Jueves 20** — mañana suave en Burgos (Catedral o Cartuja de Miraflores) y regreso a Valencia con parada de comida en ruta.
+
+*18–20 de agosto de 2026 · Los bollagas*

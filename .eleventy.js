@@ -46,7 +46,7 @@ export default function(eleventyConfig) {
     appKey:       process.env.DROPBOX_APP_KEY       || "",
     appSecret:    process.env.DROPBOX_APP_SECRET    || "",
     refreshToken: process.env.DROPBOX_REFRESH_TOKEN || "",
-    folder:       "/Almacen-archivo/2026-berlin"
+    folder:       "/Almacen-archivo/2026-burgos"
   });
 
   // --- Shortcodes Nunjucks para Google Maps ---

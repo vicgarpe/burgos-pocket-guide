@@ -42,7 +42,7 @@ const res = await fetch(`${WORKER}/finanzas/gasto`, {
     importe:       34.50,          // número decimal
     pagador:       'TV',           // quién pagó: TV | MD | YM
     participantes: ['TV','MD','YM'], // mínimo 2, el pagador debe estar incluido
-    fecha:         '2026-03-19',   // opcional — default: hoy en Europe/Berlin
+    fecha:         '2026-08-19',   // opcional — default: hoy en Europe/Madrid
   }),
 });
 const gasto = await res.json();
@@ -83,7 +83,7 @@ const res = await fetch(`${WORKER}/finanzas/cancelacion`, {
     a:           'TV',        // pareja que cobra
     importe:     29.00,
     descripcion: 'Bizum',     // opcional
-    fecha:       '2026-03-21' // opcional — default: hoy en Europe/Berlin
+    fecha:       '2026-08-20' // opcional — default: hoy en Europe/Madrid
   }),
 });
 const cancelacion = await res.json();
@@ -163,7 +163,7 @@ Todos los errores devuelven `{ success: false, error: "..." }`.
   "gastos": [
     {
       "id":            "uuid-v4",
-      "fecha":         "2026-03-19",
+      "fecha":         "2026-08-19",
       "descripcion":   "Supermercado Lidl",
       "importe":       87.60,
       "pagador":       "TV",
@@ -173,7 +173,7 @@ Todos los errores devuelven `{ success: false, error: "..." }`.
   "cancelaciones": [
     {
       "id":          "uuid-v4",
-      "fecha":       "2026-03-21",
+      "fecha":       "2026-08-20",
       "de":          "MD",
       "a":           "TV",
       "importe":     30.00,
@@ -196,7 +196,7 @@ Todos los errores devuelven `{ success: false, error: "..." }`.
 ### Estructura de la app
 - **Balance** (siempre visible): 3 filas (TV↔MD, TV↔YM, MD↔YM) con quién debe a quién o "Saldados ✓"
 - **Tab Gastos**: lista de gastos ordenada por fecha (más reciente primero) con botón eliminar
-- **Tab Añadir**: formulario con OCR de ticket, pagador (segmented control TV/MD/YM), participantes (checkboxes, todos marcados por defecto), fecha (default: hoy en Europe/Berlin)
+- **Tab Añadir**: formulario con OCR de ticket, pagador (segmented control TV/MD/YM), participantes (checkboxes, todos marcados por defecto), fecha (default: hoy en Europe/Madrid)
 - **Tab Pagar**: formulario de cancelación (de → a, importe, concepto opcional)
 
 ### Lógica de balance

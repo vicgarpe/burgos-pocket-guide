@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { createCipheriv, randomBytes, pbkdf2Sync } from 'crypto';
 
 const PASSWORD   = 'bollagas';
-const REDIRECT   = '/berlin-poket-guide/';
+const REDIRECT   = '/burgos-pocket-guide/';
 const INPUT      = '_site/galeria/index.html';
 const ITERATIONS = 250_000;
 
@@ -45,7 +45,7 @@ function buildShell(payloadJSON, iterations, redirect) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Galería — Guía de Berlín</title>
+  <title>Galería — Guía de Burgos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@700;800&display=swap" rel="stylesheet">
   <style>

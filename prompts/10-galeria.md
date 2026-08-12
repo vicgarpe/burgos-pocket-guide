@@ -1,4 +1,4 @@
-Trabajamos en la guía de viaje a Berlín construida con Eleventy.
+Trabajamos en la guía de viaje a Burgos construida con Eleventy.
 El proyecto está desplegado en GitHub Pages.
 
 Quiero añadir un módulo de galería al proyecto existente.
@@ -23,7 +23,7 @@ Cualquier persona que conozca el password podrá extraerlo si lo busca.
 Esto es aceptable: las 6 personas que tienen el password son de confianza.
 
 ### Datos de configuración
-- Carpeta Dropbox: `Almacen-archivo/2026-berlin`
+- Carpeta Dropbox: `Almacen-archivo/2026-burgos`
 - Token de Dropbox: a proporcionar antes de implementar
 
 ### Funcionalidad de la galería

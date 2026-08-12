@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="Imagen de portada pendiente">
+  <rect width="1600" height="900" fill="#f4efe6"/>
+  <rect x="24" y="24" width="1552" height="852" fill="none" stroke="#d8cdbb" stroke-width="4" stroke-dasharray="18 14"/>
+  <g font-family="Libre Franklin, Helvetica, Arial, sans-serif" text-anchor="middle">
+    <text x="800" y="430" font-size="96" font-weight="800" letter-spacing="-2" fill="#bb3825">BURGOS 2026</text>
+    <text x="800" y="510" font-size="42" font-weight="600" fill="#8a7f6d">18–20 de agosto · Los bollagas</text>
+    <text x="800" y="620" font-size="30" fill="#a29886">Imagen de portada pendiente</text>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 ---
 layout: base.njk
-title: "Finanzas — Guía de Berlín"
+title: "Finanzas — Guía de Burgos"
 permalink: /finanzas/index.html
 ---
 
@@ -411,12 +411,12 @@ function resetGastoForm() {
   document.getElementById('ocr-input').value = '';
   // Reset fecha to today
   document.getElementById('gasto-fecha').value =
-    new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+    new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' });
 }
 
 // ── Init ──────────────────────────────────────────────────────────
 document.getElementById('gasto-fecha').value =
-  new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' });
 
 document.addEventListener('viaje:authed',    loadData);
 document.addEventListener('viaje:unlocked',  loadData);

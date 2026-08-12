@@ -1,8 +1,8 @@
-# Berlin Pocket Guide — Guía del autor
+# Burgos Pocket Guide — Guía del autor
 
 Guía de viaje estática generada con [Eleventy](https://www.11ty.dev/), desplegada en GitHub Pages.
 
-- **URL producción:** `https://vicgarpe.github.io/berlin-poket-guide/`
+- **URL producción:** `https://vicgarpe.github.io/burgos-pocket-guide/`
 - **Rama de trabajo:** `desarrollo`
 - **Rama de producción:** `main`
 
@@ -14,7 +14,7 @@ El sitio se despliega automáticamente en GitHub Pages al hacer push a `main`.
 
 ```bash
 # Probar en local
-npm run serve          # http://localhost:8080/berlin-poket-guide/
+npm run serve          # http://localhost:8080/burgos-pocket-guide/
 
 # Cuando esté listo: commit, merge y push a main
 git checkout main
@@ -46,7 +46,7 @@ Frontmatter mínimo:
 layout: post.njk
 title: "Día N — Título"
 excerpt: "Descripción breve."
-lugar: "Berlín"
+lugar: "Burgos"
 hero: "/images/nombre.jpg"
 alt: "Descripción de la imagen"
 templateEngineOverride: njk,md
@@ -70,7 +70,7 @@ El widget lee automáticamente la sección `## Timetable estimado` del propio po
 ## Timetable estimado (orientativo)
 
 - **09:20** — Salida desde el hotel          ← hito puntual (punto en el eje)
-- **10:00–12:30 · Free tour Berlín**         ← evento con duración (barra)
+- **10:00–12:30 · Visita guiada Atapuerca**         ← evento con duración (barra)
 - **12:30–13:30** — Comida / descanso        ← evento con duración (barra)
 - 13:50 — Despegue VLC                       ← hito sin negrita (también válido)
 ```
@@ -227,21 +227,21 @@ var PWD = 'bollagas';
 ### `{% gmap "query", "etiqueta" %}`
 Enlace a Google Maps por búsqueda de texto.
 ```
-{% gmap "Rotes Rathaus, Berlin", "Punto de encuentro — Rotes Rathaus" %}
+{% gmap "Catedral de Burgos", "Punto de encuentro — Catedral" %}
 ```
 
 ### `{% gcoords lat, lon, "etiqueta" %}`
 Enlace a Google Maps por coordenadas GPS.
 ```
-{% gcoords 52.5186, 13.4081, "Rotes Rathaus — GPS" %}
+{% gcoords 42.3409, -3.7044, "Catedral de Burgos — GPS" %}
 ```
 
 ### `{% wiki "slug", "etiqueta" %}`
 Enlace interno entre fichas por nombre de fichero (sin extensión). Resuelve la URL según el prefijo del slug.
 ```
 {% wiki "recursos_meteo", "→ Previsión meteorológica" %}
-{% wiki "historia_muro", "El Muro de Berlín" %}
-{% wiki "2026-03-19-muro-monumental", "Día 1" %}
+{% wiki "historia_burgos", "Burgos: ciudad, Camino y Castilla" %}
+{% wiki "2026-08-19-atapuerca", "Día 1" %}
 ```
 
 ### `{% timeline "YYYY-MM-DD" %}`

@@ -7,7 +7,7 @@
   - `npm run serve` → galería sin contraseña (dev)
   - `npm run build` → galería cifrada con password `bollagas`; incorrecto → redirige a home
 - Credenciales Dropbox en `.env` (ignorado por git) + GitHub Secrets para CI/CD
-- Carpeta Dropbox: `/Almacen-archivo/2026-berlin`
+- Carpeta Dropbox: `/Almacen-archivo/2026-burgos`
 - Subida con progreso real (XHR + spinner braille + mensajes técnicos por chunks)
 - Umbrales de chunk: 100 MB (producción), configurables en `src/_data/galeria.json`
 - Autorename propio antes de subir para evitar sobreescribir duplicados

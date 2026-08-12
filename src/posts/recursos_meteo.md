@@ -1,15 +1,15 @@
 ---
 layout: post.njk
-title: "Meteorología — Berlín, marzo 2026"
+title: "Meteorología — Burgos, agosto 2026"
 excerpt: "Previsión del tiempo para los días del viaje, actualizada en tiempo real con Open-Meteo."
 modulo: "Recursos"
-hero: "/images/berlin-hero-1200.jpg"
-alt: "Cielo sobre Berlín"
+hero: "/images/placeholder-hero.svg"
+alt: "Imagen pendiente — cielo sobre Burgos"
 templateEngineOverride: njk,md
 permalink: /recursos/recursos_meteo/
 ---
 
-Previsión actualizada al abrir esta página. Sin API key — datos libres de [Open-Meteo](https://open-meteo.com/) (Berlín, 52.52°N 13.41°E).
+Previsión actualizada al abrir esta página. Sin API key — datos libres de [Open-Meteo](https://open-meteo.com/) (Burgos, 42.34°N 3.70°O).
 
 <div id="meteo-widget">
   <p class="text-muted">Cargando previsión…</p>
@@ -17,19 +17,17 @@ Previsión actualizada al abrir esta página. Sin API key — datos libres de [O
 
 ## Otras fuentes
 
-- [Weatherspark — Berlín en marzo](https://es.weatherspark.com/m/75981/3/Tiempo-promedio-en-marzo-en-Berl%C3%ADn-Alemania)
-- [Meteoblue — semana](https://www.meteoblue.com/es/tiempo/semana/berl%C3%ADn_alemania_2950159)
-- [Meteoblue — 14 días](https://www.meteoblue.com/es/tiempo/14-dias/berl%C3%ADn_alemania_2950159)
+- [AEMET — Burgos](https://www.aemet.es/es/eltiempo/prediccion/municipios/burgos-id09059)
+- [Meteoblue — semana](https://www.meteoblue.com/es/tiempo/semana/burgos_espa%C3%B1a_3128026)
+- [Meteoblue — 14 días](https://www.meteoblue.com/es/tiempo/14-dias/burgos_espa%C3%B1a_3128026)
 - [Windy (visual, en español)](https://www.windy.com/es/)
 
 <script>
 (async () => {
   const TRIP = [
-    { date: "2026-03-18", label: "Mié 18 · Llegada" },
-    { date: "2026-03-19", label: "Jue 19 · Muro / Tours" },
-    { date: "2026-03-20", label: "Vie 20 · Sachsenhausen" },
-    { date: "2026-03-21", label: "Sáb 21 · Mañana suave" },
-    { date: "2026-03-22", label: "Dom 22 · Vuelo 06:00" }
+    { date: "2026-08-18", label: "Mar 18 · Llegada" },
+    { date: "2026-08-19", label: "Mié 19 · Atapuerca" },
+    { date: "2026-08-20", label: "Jue 20 · Regreso" }
   ];
 
   const WMO_DESC = {
@@ -53,9 +51,9 @@ Previsión actualizada al abrir esta página. Sin API key — datos libres de [O
 
   try {
     const url = "https://api.open-meteo.com/v1/forecast"
-      + "?latitude=52.52&longitude=13.41"
+      + "?latitude=42.3439&longitude=-3.6969"
       + "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max"
-      + "&timezone=Europe%2FBerlin&forecast_days=16";
+      + "&timezone=Europe%2FMadrid&forecast_days=16";
 
     const res = await fetch(url);
     if (!res.ok) throw new Error("API error");
@@ -76,7 +74,7 @@ Previsión actualizada al abrir esta página. Sin API key — datos libres de [O
     }).filter(Boolean);
 
     if (rows.length === 0) {
-      widget.innerHTML = '<p class="text-muted">La previsión aún no cubre las fechas del viaje. Vuelve a consultar más cerca del 18 de marzo.</p>';
+      widget.innerHTML = '<p class="text-muted">La previsión aún no cubre las fechas del viaje. Vuelve a consultar más cerca del 18 de agosto.</p>';
       return;
     }
 
