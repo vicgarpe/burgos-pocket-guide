@@ -7,3 +7,8 @@ src/images-master/
 
 .env
 prompts/20-secretos-dropbox.md
+
+# Worker de finanzas: secretos locales y artefactos de wrangler
+worker/.dev.vars
+worker/node_modules/
+worker/.wrangler/

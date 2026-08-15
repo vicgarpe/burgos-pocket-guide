@@ -1,0 +1,15 @@
+# Copia este fichero a .dev.vars y rellena los valores. .dev.vars está en
+# .gitignore: no lo commitees nunca.
+
+# Clave de la API de Anthropic (Claude). Paga el OCR de los tickets.
+ANTHROPIC_API_KEY=
+
+# Token de acceso al worker. El frontend lo envía en el header x-api-token.
+# Es el mismo valor que WORKER_TOKEN en el .env de la web.
+# Para generar uno: openssl rand -hex 32
+API_TOKEN=
+
+# Credenciales de Dropbox, donde se guarda finanzas.json.
+DROPBOX_APP_KEY=
+DROPBOX_APP_SECRET=
+DROPBOX_REFRESH_TOKEN=

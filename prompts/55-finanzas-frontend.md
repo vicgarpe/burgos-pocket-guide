@@ -1,21 +1,39 @@
 # Finanzas — integración desde el frontend
 
-Este documento describe cómo el frontend consume los endpoints de finanzas
-del worker `mariano-traductor`. El módulo de finanzas es para las 3 parejas
-del viaje: `TV` (Tere-Víctor), `MD` (Maria-Dani), `YM` (Yoly-Mario).
+Este documento describe cómo el frontend consume los endpoints del worker
+`burgos-finanzas`, cuyo código está en `worker/` de este mismo repo. El módulo
+de finanzas es para las 3 parejas del viaje: `TV` (Tere-Víctor),
+`MD` (Maria-Dani), `YM` (Yoly-Mario).
 
-> ⚠️ El backend también debe validar `TV`, `MD`, `YM` (no `VT`/`DM`/`MY`).
+> ⚠️ El backend también valida `TV`, `MD`, `YM` (no `VT`/`DM`/`MY`).
 
 ---
 
 ## Configuración base
 
 ```javascript
-const WORKER = 'https://mariano-traductor.victor-garcia-penyas.workers.dev';
-const TOKEN  = '<valor de API_TOKEN>';   // mismo token que usa /translate
+const WORKER = 'https://burgos-finanzas.victor-garcia-penyas.workers.dev';
+const TOKEN  = '<valor de API_TOKEN>';   // = WORKER_TOKEN del .env
+const VIAJE  = 'burgos';
 
 const headers = { 'x-api-token': TOKEN };
+
+// Las rutas de datos llevan el viaje; el OCR no lo necesita.
+function api(path) {
+  return WORKER + path + (path.indexOf('?') === -1 ? '?' : '&') + 'viaje=' + VIAJE;
+}
 ```
+
+## El parámetro `viaje`
+
+El worker guarda un fichero de cuentas por viaje, para que las de uno no se
+mezclen con las de otro. `?viaje=burgos` apunta a
+`/Apps/burgos-finanzas/finanzas.json`; un slug que no esté en la tabla `VIAJES`
+del worker devuelve 400.
+
+La ruta la resuelve siempre el servidor, nunca el cliente: el token acaba
+publicado en la web y las credenciales de Dropbox son de acceso total, así que
+aceptar una ruta arbitraria del navegador abriría el Dropbox entero.
 
 ---
 
@@ -24,7 +42,7 @@ const headers = { 'x-api-token': TOKEN };
 ### GET /finanzas — leer todos los datos
 
 ```javascript
-const res  = await fetch(`${WORKER}/finanzas`, { headers });
+const res  = await fetch(api('/finanzas'), { headers });
 const data = await res.json();
 // data = { gastos: [...], cancelaciones: [...] }
 ```
@@ -34,7 +52,7 @@ const data = await res.json();
 ### POST /finanzas/gasto — añadir un gasto
 
 ```javascript
-const res = await fetch(`${WORKER}/finanzas/gasto`, {
+const res = await fetch(api('/finanzas/gasto'), {
   method:  'POST',
   headers: { ...headers, 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -61,7 +79,7 @@ const gasto = await res.json();
 ### DELETE /finanzas/gasto/:id — eliminar un gasto
 
 ```javascript
-const res = await fetch(`${WORKER}/finanzas/gasto/${gasto.id}`, {
+const res = await fetch(api(`/finanzas/gasto/${gasto.id}`), {
   method:  'DELETE',
   headers,
 });
@@ -75,7 +93,7 @@ const data = await res.json();
 ### POST /finanzas/cancelacion — registrar un pago entre parejas
 
 ```javascript
-const res = await fetch(`${WORKER}/finanzas/cancelacion`, {
+const res = await fetch(api('/finanzas/cancelacion'), {
   method:  'POST',
   headers: { ...headers, 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -148,7 +166,7 @@ y confirma antes de guardar.
 | Código | Causa |
 |--------|-------|
 | 401 | Token ausente o incorrecto |
-| 400 | Validación fallida (ver mensaje en `error`) |
+| 400 | Validación fallida, o viaje desconocido (ver mensaje en `error`) |
 | 404 | ID de gasto no encontrado (DELETE) |
 | 502 | Error en Dropbox o en Claude |
 
@@ -204,10 +222,12 @@ Deuda pairwise: para cada gasto, cada participante que no es pagador debe `impor
 Las cancelaciones reducen esa deuda. Se muestra el neto por par.
 
 ### Token
-El `workerToken` se inyecta en build-time desde la variable de entorno `WORKER_TOKEN` vía `{{ workerToken }}` en la plantilla Nunjucks.
+El `workerToken` se inyecta en build-time desde la variable de entorno `WORKER_TOKEN` vía `{{ workerToken }}` en la plantilla Nunjucks. Como queda dentro del HTML, `scripts/encrypt-finanzas.mjs` cifra la página después del build.
 
 ### Ficheros
+- `worker/` — el worker: endpoints, tabla de viajes y OCR
 - `src/finanzas.njk` — página principal de la app
 - `src/posts/recursos_finanzas.md` — entrada en módulo Recursos
 - `.eleventy.js` — shortcode `finanzas` añadido
 - `src/styles.css` — clases `.fin-*`
+- `scripts/encrypt-finanzas.mjs` — cifrado post-build

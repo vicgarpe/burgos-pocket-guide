@@ -1,0 +1,11 @@
+name = "burgos-finanzas"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+account_id = "80c2bb6519ab6bbd1c8ea8708ed76a57"
+
+# Los secretos nunca van aquí en texto plano. En local viven en .dev.vars
+# (fuera de git) y en Cloudflare los sube scripts/deploy.sh:
+#   ANTHROPIC_API_KEY, API_TOKEN,
+#   DROPBOX_APP_KEY, DROPBOX_APP_SECRET, DROPBOX_REFRESH_TOKEN
+#
+# La tabla de viajes y el modelo de Claude están en src/index.js.

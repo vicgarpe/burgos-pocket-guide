@@ -1,6 +1,13 @@
 /**
- * Post-build: cifra _site/traductor/index.html con AES-256-GCM
+ * Post-build: cifra _site/finanzas/index.html con AES-256-GCM
  * y lo reemplaza por una página shell con formulario de contraseña.
+ *
+ * La página lleva dentro el token del worker, así que sin esto quedaría
+ * legible para cualquiera que abra la URL. Mismo montaje que la galería,
+ * incluida la clave guardada: desbloquear una desbloquea la otra.
+ *
+ * En desarrollo (`npm run serve`) este script NO se ejecuta,
+ * así que Finanzas es accesible directamente.
  */
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -8,7 +15,7 @@ import { createCipheriv, randomBytes, pbkdf2Sync } from 'crypto';
 
 const PASSWORD   = 'bollagas';
 const REDIRECT   = '/burgos-pocket-guide/';
-const INPUT      = '_site/traductor/index.html';
+const INPUT      = '_site/finanzas/index.html';
 const ITERATIONS = 250_000;
 
 const plaintext = readFileSync(INPUT, 'utf-8');
@@ -29,7 +36,7 @@ const payload = JSON.stringify({
 });
 
 writeFileSync(INPUT, buildShell(payload, ITERATIONS, REDIRECT), 'utf-8');
-console.log('✓ traductor/index.html — cifrada con AES-256-GCM');
+console.log('✓ finanzas/index.html — cifrada con AES-256-GCM');
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -41,7 +48,7 @@ function buildShell(payloadJSON, iterations, redirect) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Traductor — Guía de Burgos</title>
+  <title>Finanzas — Guía de Burgos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@700;800&display=swap" rel="stylesheet">
   <style>
@@ -107,7 +114,7 @@ function buildShell(payloadJSON, iterations, redirect) {
 </head>
 <body>
   <div class="card">
-    <h1>Traductor</h1>
+    <h1>Finanzas</h1>
     <input id="pw" type="password" placeholder="Contraseña" autocomplete="current-password" autofocus>
     <button id="btn" type="button">Entrar</button>
   </div>

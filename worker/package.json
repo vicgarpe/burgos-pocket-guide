@@ -1,0 +1,11 @@
+{
+  "name": "burgos-finanzas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Worker de finanzas compartidas del viaje a Burgos (gastos en Dropbox + OCR de tickets con Claude)",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "./scripts/deploy.sh"
+  }
+}

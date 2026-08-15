@@ -71,11 +71,11 @@ permalink: /finanzas/index.html
 
         {# Formulario #}
         <div class="mb-2">
-          <input type="text" id="gasto-desc" class="trad-input-contexto" placeholder="Descripción (p.ej. Supermercado Lidl)">
+          <input type="text" id="gasto-desc" class="fin-input" placeholder="Descripción (p.ej. Supermercado Lidl)">
         </div>
         <div class="d-flex gap-2 mb-2">
-          <input type="number" id="gasto-importe" class="trad-input-contexto" placeholder="Importe (€)" step="0.01" min="0" style="flex:1">
-          <input type="date" id="gasto-fecha" class="trad-input-contexto" style="flex:1">
+          <input type="number" id="gasto-importe" class="fin-input" placeholder="Importe (€)" step="0.01" min="0" style="flex:1">
+          <input type="date" id="gasto-fecha" class="fin-input" style="flex:1">
         </div>
 
         <p class="fin-form-label mt-3 mb-1">¿Quién paga?</p>
@@ -103,24 +103,24 @@ permalink: /finanzas/index.html
       {# ── Tab Pagar ──────────────────────────────────────────── #}
       <div class="tab-pane fade" id="tab-pagar" role="tabpanel">
         <p class="fin-form-label mb-1">¿Quién paga?</p>
-        <select id="canc-de" class="trad-input-contexto mb-2">
+        <select id="canc-de" class="fin-input mb-2">
           <option value="TV">TV</option>
           <option value="MD">MD</option>
           <option value="YM">YM</option>
         </select>
 
         <p class="fin-form-label mb-1">¿A quién?</p>
-        <select id="canc-a" class="trad-input-contexto mb-2">
+        <select id="canc-a" class="fin-input mb-2">
           <option value="TV">TV</option>
           <option value="MD" selected>MD</option>
           <option value="YM">YM</option>
         </select>
 
         <div class="mb-2">
-          <input type="number" id="canc-importe" class="trad-input-contexto" placeholder="Importe (€)" step="0.01" min="0">
+          <input type="number" id="canc-importe" class="fin-input" placeholder="Importe (€)" step="0.01" min="0">
         </div>
         <div class="mb-3">
-          <input type="text" id="canc-desc" class="trad-input-contexto" placeholder="Concepto (opcional, p.ej. Bizum)">
+          <input type="text" id="canc-desc" class="fin-input" placeholder="Concepto (opcional, p.ej. Bizum)">
         </div>
 
         <button class="gallery-upload-btn" id="btn-submit-canc" onclick="submitCancelacion()" style="width:100%;justify-content:center;font-size:.95rem;padding:.7rem 1rem">
@@ -133,10 +133,17 @@ permalink: /finanzas/index.html
 {% endgate %}
 
 <script>
-const WORKER  = 'https://mariano-traductor.victor-garcia-penyas.workers.dev';
+const WORKER  = 'https://burgos-finanzas.victor-garcia-penyas.workers.dev';
 const TOKEN   = '{{ workerToken }}';
 const HDR     = { 'x-api-token': TOKEN };
 const PAREJAS = ['TV', 'MD', 'YM'];
+
+// El worker guarda un fichero de cuentas por viaje. Sin este parámetro
+// tocaríamos las de otro viaje. El OCR no lo necesita: no guarda nada.
+const VIAJE   = 'burgos';
+function api(path) {
+  return WORKER + path + (path.indexOf('?') === -1 ? '?' : '&') + 'viaje=' + VIAJE;
+}
 
 let state = { gastos: [], cancelaciones: [] };
 
@@ -146,7 +153,7 @@ async function loadData() {
   hide('fin-error');
   hide('fin-content');
   try {
-    const r = await fetch(WORKER + '/finanzas', { headers: HDR });
+    const r = await fetch(api('/finanzas'), { headers: HDR });
     if (!r.ok) throw new Error('Error ' + r.status);
     state = await r.json();
     renderAll();
@@ -290,7 +297,7 @@ async function submitGasto() {
   try {
     var body = { descripcion: desc, importe: imp, pagador: pagador, participantes: partic };
     if (fecha) body.fecha = fecha;
-    var r = await fetch(WORKER + '/finanzas/gasto', {
+    var r = await fetch(api('/finanzas/gasto'), {
       method: 'POST',
       headers: Object.assign({}, HDR, { 'Content-Type': 'application/json' }),
       body: JSON.stringify(body)
@@ -310,7 +317,7 @@ async function submitGasto() {
 async function deleteGasto(id) {
   if (!confirm('¿Eliminar este pago?')) return;
   try {
-    var r = await fetch(WORKER + '/finanzas/gasto/' + id, { method: 'DELETE', headers: HDR });
+    var r = await fetch(api('/finanzas/gasto/' + id), { method: 'DELETE', headers: HDR });
     var data = await r.json();
     if (!r.ok || !data.success) throw new Error(data.error || 'Error');
     await loadData();
@@ -322,7 +329,7 @@ async function deleteGasto(id) {
 async function deleteCancelacion(id) {
   if (!confirm('¿Eliminar esta cancelación?')) return;
   try {
-    var r = await fetch(WORKER + '/finanzas/cancelacion/' + id, { method: 'DELETE', headers: HDR });
+    var r = await fetch(api('/finanzas/cancelacion/' + id), { method: 'DELETE', headers: HDR });
     var data = await r.json();
     if (!r.ok || !data.success) throw new Error(data.error || 'Error');
     await loadData();
@@ -378,7 +385,7 @@ async function submitCancelacion() {
   try {
     var body = { de: de, a: a, importe: imp };
     if (desc) body.descripcion = desc;
-    var r = await fetch(WORKER + '/finanzas/cancelacion', {
+    var r = await fetch(api('/finanzas/cancelacion'), {
       method: 'POST',
       headers: Object.assign({}, HDR, { 'Content-Type': 'application/json' }),
       body: JSON.stringify(body)

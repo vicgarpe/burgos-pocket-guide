@@ -1014,6 +1014,25 @@ a:hover{
 .gate-shake{ animation: gate-shake .4s ease; }
 
 /* ── Finanzas ──────────────────────────────────────────────────── */
+.fin-input{
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: .5rem;
+  padding: .55rem 1rem;
+  font-size: 16px;          /* 16px evita que iOS haga zoom al enfocar */
+  font-family: var(--font-sans);
+  outline: none;
+  background: #fff;
+  color: var(--muted);
+  transition: border-color .15s, box-shadow .15s;
+  touch-action: manipulation;
+}
+.fin-input:focus{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(155,50,33,.13);
+  color: var(--text);
+}
+
 .fin-reload-btn{
   border: 1px solid var(--rule);
   background: none;
