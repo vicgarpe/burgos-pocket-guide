@@ -23,6 +23,11 @@ git push origin main
 git checkout desarrollo
 ```
 
+### El worker de finanzas
+
+El backend de Finanzas es un Cloudflare Worker aparte, con su código en `worker/`.
+No se despliega con el sitio: cuando cambies algo ahí, ejecuta `cd worker && npm run deploy`.
+
 ---
 
 ## Estructura de posts
@@ -143,23 +148,6 @@ DROPBOX_REFRESH_TOKEN
 
 ---
 
-## Módulo Traductor (`/traductor/`)
-
-Traduce texto o imagen (OCR) del alemán al español via Cloudflare Worker. Acceso protegido.
-
-**Funcionalidades:**
-- Modo texto: pegar o escribir alemán → traducción con notas contextuales de Mariano
-- Modo foto: capturar o subir imagen → OCR + traducción
-- Campo de contexto opcional (p.ej. "menú de restaurante", "señal de tráfico")
-- Resultado estructurado: traducción principal + tabla de fragmentos + nota cultural
-
-**Variable de entorno requerida:**
-```
-WORKER_TOKEN
-```
-
----
-
 ## Módulo Finanzas (`/finanzas/`)
 
 Registro y balance de gastos del viaje entre los participantes (TV, MD, YM). Acceso protegido.
@@ -169,7 +157,11 @@ Registro y balance de gastos del viaje entre los participantes (TV, MD, YM). Acc
 - **Movimientos:** lista cronológica de gastos y cancelaciones, todos eliminables
 - **Añadir gasto:** descripción, importe, fecha, pagador y participantes; opcionalmente mediante OCR de ticket (foto → Worker → campos prellenados)
 - **Cancelación de deuda:** registro de pagos directos entre participantes
-- Datos almacenados y servidos por el Cloudflare Worker
+- Datos almacenados y servidos por el worker `burgos-finanzas` (código en `worker/`), que los guarda en `/Apps/burgos-finanzas/finanzas.json` de Dropbox
+
+El worker acepta un parámetro `?viaje=<slug>` para elegir el fichero de cuentas, de forma que las de un viaje no se mezclen con las de otro. La web manda siempre `viaje=burgos`.
+
+La página se cifra tras el build (`scripts/encrypt-finanzas.mjs`) porque lleva el token del worker dentro; sin eso quedaría legible en la web publicada.
 
 **Variable de entorno requerida:**
 ```
@@ -180,7 +172,7 @@ WORKER_TOKEN
 
 ## Sistema de autenticación unificado
 
-Los tres módulos de aplicación (Galería, Traductor, Finanzas) están protegidos por un gate de contraseña compartido.
+Los dos módulos de aplicación (Galería y Finanzas) están protegidos por un gate de contraseña compartido.
 
 ### Cómo funciona
 
@@ -247,12 +239,6 @@ Enlace interno entre fichas por nombre de fichero (sin extensión). Resuelve la 
 ### `{% timeline "YYYY-MM-DD" %}`
 Widget de línea de tiempo del día. Ver sección Módulo Agenda.
 
-### `{% traductor "Etiqueta" %}`
-Botón que enlaza al módulo Traductor.
-```
-{% traductor "Abrir Mariano..." %}
-```
-
 ### `{% finanzas "Etiqueta" %}`
 Botón que enlaza al módulo Finanzas.
 ```
@@ -261,12 +247,6 @@ Botón que enlaza al módulo Finanzas.
 
 ### `{% gate %}...{% endgate %}`
 Envuelve contenido con el gate de autenticación compartido. Ver sección anterior.
-
----
-
-## Widget TTS — pronunciación en alemán
-
-En cualquier tabla con columna `Alemán` (cabecera exacta), cada celda añade automáticamente un icono ▶ clicable. Al pulsar, el navegador pronuncia la frase en alemán (Web Speech API, sin conexión necesaria). No requiere configuración.
 
 ---
 
@@ -285,7 +265,7 @@ Todas se definen en `.env` (local) y en GitHub Secrets (producción). Se inyecta
 
 | Variable | Uso |
 |---|---|
-| `WORKER_TOKEN` | Token de autenticación para el Cloudflare Worker (Traductor + Finanzas) |
+| `WORKER_TOKEN` | Token de autenticación del worker `burgos-finanzas` (ver `worker/`). Tiene que coincidir con su `API_TOKEN` |
 | `DROPBOX_APP_KEY` | App Key de la aplicación Dropbox |
 | `DROPBOX_APP_SECRET` | App Secret de la aplicación Dropbox |
 | `DROPBOX_REFRESH_TOKEN` | Refresh token OAuth2 de Dropbox |
