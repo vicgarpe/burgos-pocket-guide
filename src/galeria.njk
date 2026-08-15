@@ -95,7 +95,6 @@ const UPLOAD = {
 
 let token = null;
 let allFiles = [];
-let allThumbs = {};
 let currentIdx = 0;
 let isSelectMode = false;
 let selectedFiles = new Set();
@@ -119,8 +118,9 @@ async function initGallery() {
       document.getElementById('gallery-upload-label').classList.remove('d-none');
       return;
     }
-    allThumbs = await batchThumbs(allFiles);
-    renderGrid(allFiles, allThumbs);
+    // El grid se pinta ya, con huecos: la estructura aparece en cuanto
+    // responde el listado, no cuando han llegado todas las miniaturas.
+    renderGrid(allFiles);
   } catch (err) {
     showError(err.message || 'Error al cargar la galería');
   }
@@ -248,30 +248,139 @@ function groupFiles(files, groupBy) {
   return entries.map(([key, items]) => ({ label: formatGroupLabel(key, groupBy), items }));
 }
 
-async function batchThumbs(files) {
-  const map = {};
-  for (let i = 0; i < files.length; i += 25) {
-    const chunk = files.slice(i, i + 25);
-    const r = await fetch('https://content.dropboxapi.com/2/files/get_thumbnail_batch', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        entries: chunk.map(f => ({
-          path: f.path_lower,
-          format: { '.tag': 'jpeg' },
-          size:   { '.tag': 'w480h320' },
-          mode:   { '.tag': 'fitone_bestfit' }
-        }))
-      })
-    });
-    const d = await r.json();
-    for (const e of (d.entries || [])) {
-      if (e['.tag'] === 'success') {
-        map[e.metadata.path_lower] = 'data:image/jpeg;base64,' + e.thumbnail;
-      }
-    }
+// ─── Miniaturas ──────────────────────────────────────────────────────────────
+// La galería se quedaba en blanco hasta que llegaban TODAS las miniaturas: con
+// 150 fotos eran 14,5 MB y unos 28 s de pantalla vacía. Ahora:
+//
+//   1. El grid se pinta en cuanto responde el listado (~0,7 s), con huecos.
+//   2. Cada hueco pide su miniatura al acercarse a la pantalla, en lotes.
+//   3. Lo descargado se guarda en Cache Storage con la huella del fichero, así
+//      que al volver a abrir la galería sale al instante y sin red.
+//
+// La clave es el número de peticiones, no su tamaño: cada lote a Dropbox tarda
+// 1,5-3 s pida lo que pida, así que lo que importa es no pedir de más antes de
+// lo que el usuario está mirando.
+
+const THUMB_SIZE  = 'w480h320';
+const THUMB_CACHE = 'bgp-thumbs-v1';
+const THUMB_BATCH = 25;   // máximo que acepta get_thumbnail_batch
+
+let   thumbCache  = undefined;   // Cache | null (null = no disponible)
+const thumbURLs   = {};          // path_lower → object URL
+const thumbFailed = new Set();   // Dropbox no sabe miniaturizarlo
+const thumbAsked  = new Set();
+const filesByPath = new Map();
+let   thumbObserver = null;
+
+async function getThumbCache() {
+  if (thumbCache !== undefined) return thumbCache;
+  try { thumbCache = await caches.open(THUMB_CACHE); }
+  catch { thumbCache = null; }   // navegación privada, http://…
+  return thumbCache;
+}
+
+function thumbKey(file) {
+  return `https://miniaturas.local/${THUMB_SIZE}/${file.content_hash || file.rev}`;
+}
+
+function bestThumb(path) { return thumbURLs[path] || ''; }
+
+function b64ToBlob(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: 'image/jpeg' });
+}
+
+// Pinta las miniaturas que acaban de llegar
+function applyThumbs(paths) {
+  for (const path of paths) {
+    const item = document.querySelector(`.gallery-item[data-path="${CSS.escape(path)}"]`);
+    if (!item) continue;
+    item.classList.remove('gallery-item--loading');
+    if (thumbFailed.has(path)) { item.classList.add('gallery-item--nothumb'); continue; }
+    const img = item.querySelector('img');
+    if (img && thumbURLs[path]) img.src = thumbURLs[path];
   }
-  return map;
+}
+
+async function fetchThumbBatch(chunk) {
+  const r = await fetch('https://content.dropboxapi.com/2/files/get_thumbnail_batch', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      entries: chunk.map(f => ({
+        path: f.path_lower,
+        format: { '.tag': 'jpeg' },
+        size:   { '.tag': THUMB_SIZE },
+        mode:   { '.tag': 'fitone_bestfit' }
+      }))
+    })
+  });
+  if (!r.ok) throw new Error('Error al pedir miniaturas');
+  const d = await r.json();
+  const c = await getThumbCache();
+  const byPath = new Map(chunk.map(f => [f.path_lower, f]));
+  for (const e of (d.entries || [])) {
+    if (e['.tag'] !== 'success') continue;
+    const path = e.metadata.path_lower;
+    const blob = b64ToBlob(e.thumbnail);
+    thumbURLs[path] = URL.createObjectURL(blob);
+    const file = byPath.get(path);
+    if (c && file) c.put(thumbKey(file), new Response(blob)).catch(() => {});
+  }
+  for (const f of chunk) if (!thumbURLs[f.path_lower]) thumbFailed.add(f.path_lower);
+}
+
+// Resuelve un grupo de rutas: primero la caché, y a Dropbox solo lo que falte
+async function loadThumbs(paths) {
+  const files = paths.map(p => filesByPath.get(p)).filter(Boolean);
+  if (!files.length) return;
+
+  const c = await getThumbCache();
+  const miss = [];
+  if (c) {
+    await Promise.all(files.map(async f => {
+      try {
+        const r = await c.match(thumbKey(f));
+        if (r) thumbURLs[f.path_lower] = URL.createObjectURL(await r.blob());
+        else miss.push(f);
+      } catch { miss.push(f); }
+    }));
+    applyThumbs(files.map(f => f.path_lower).filter(p => thumbURLs[p]));
+  } else {
+    miss.push(...files);
+  }
+
+  for (let i = 0; i < miss.length; i += THUMB_BATCH) {
+    const chunk = miss.slice(i, i + THUMB_BATCH);
+    try { await fetchThumbBatch(chunk); }
+    catch { chunk.forEach(f => thumbAsked.delete(f.path_lower)); continue; }
+    applyThumbs(chunk.map(f => f.path_lower));
+  }
+}
+
+function ensureObserver() {
+  if (thumbObserver) return thumbObserver;
+  let queue = [], timer = null;
+  thumbObserver = new IntersectionObserver(entries => {
+    for (const en of entries) {
+      if (!en.isIntersecting) continue;
+      thumbObserver.unobserve(en.target);
+      const path = en.target.dataset.path;
+      if (!path || thumbURLs[path] || thumbAsked.has(path)) continue;
+      thumbAsked.add(path);
+      queue.push(path);
+    }
+    // Agrupa en un solo lote todo lo que entra en pantalla de golpe
+    if (queue.length && !timer) {
+      timer = setTimeout(() => {
+        const q = queue; queue = []; timer = null;
+        loadThumbs(q);
+      }, 60);
+    }
+  }, { rootMargin: '900px 0px' });   // se adelanta ~una pantalla al scroll
+  return thumbObserver;
 }
 
 async function getTempLink(path) {
@@ -298,22 +407,31 @@ async function getLargeThumb(path) {
 
 // ─── Render grid ─────────────────────────────────────────────────────────────
 
-function makeItem(file, idx, thumbs) {
-  const thumb = thumbs[file.path_lower];
+function makeItem(file, idx) {
   const video = isVideo(file);
   const item = document.createElement('div');
   item.className = 'gallery-item' + (video ? ' gallery-item--video' : '');
-  item.dataset.idx = idx;
+  item.dataset.idx  = idx;
+  item.dataset.path = file.path_lower;
+  item.dataset.name = file.name;
 
-  if (thumb) {
-    const img = document.createElement('img');
-    img.src = thumb;
-    img.alt = file.name;
-    img.loading = 'lazy';
-    item.appendChild(img);
-  } else {
+  if (thumbFailed.has(file.path_lower)) {
     item.classList.add('gallery-item--nothumb');
-    item.dataset.name = file.name;
+  } else {
+    const img = document.createElement('img');
+    img.alt = file.name;
+    img.decoding = 'async';
+    const src = thumbURLs[file.path_lower];
+    if (src) img.src = src;
+    else item.classList.add('gallery-item--loading');
+    // La proporción real solo se conoce al cargar la imagen: Dropbox dejó de
+    // devolver las dimensiones en el listado. Fijarla evita que el mosaico
+    // baile cuando llegan las miniaturas buenas.
+    img.addEventListener('load', () => {
+      if (img.naturalWidth) item.style.setProperty('--ar', img.naturalWidth / img.naturalHeight);
+      item.classList.remove('gallery-item--loading');
+    });
+    item.appendChild(img);
   }
 
   if (video) {
@@ -347,17 +465,27 @@ function makeItem(file, idx, thumbs) {
   return item;
 }
 
-function renderGrid(files, thumbs) {
+function renderGrid(files) {
   setStatus('hide');
   const grid = document.getElementById('gallery-grid');
   grid.innerHTML = '';
+  filesByPath.clear();
+  files.forEach(f => filesByPath.set(f.path_lower, f));
+  // El grid se reconstruye entero al reagrupar: el observador anterior se
+  // quedaría vigilando elementos ya descartados.
+  if (thumbObserver) { thumbObserver.disconnect(); thumbObserver = null; }
+  const obs = ensureObserver();
 
   groupFiles(files, currentGroupBy).forEach(group => {
     const header = document.createElement('div');
     header.className = 'gallery-group-header';
     header.textContent = group.label;
     grid.appendChild(header);
-    group.items.forEach(({ file, idx }) => grid.appendChild(makeItem(file, idx, thumbs)));
+    group.items.forEach(({ file, idx }) => {
+      const item = makeItem(file, idx);
+      grid.appendChild(item);
+      if (!isVideo(file)) obs.observe(item);   // pide la buena al acercarse
+    });
   });
 
   grid.classList.remove('d-none');
@@ -460,7 +588,7 @@ async function loadItem(idx) {
   try {
     if (isVideo(file)) {
       // Vídeos: solo metadatos Dropbox, no EXIF
-      const poster = allThumbs[file.path_lower] || '';
+      const poster = bestThumb(file.path_lower);
       if (poster) content.innerHTML = `<img class="lightbox-media" src="${poster}" alt="${file.name}">`;
       const link = await getTempLink(file.path_lower);
       content.innerHTML = `<video class="lightbox-media" controls autoplay playsinline preload="auto"${poster ? ` poster="${poster}"` : ''} src="${link}"></video>`;
@@ -618,7 +746,7 @@ document.querySelectorAll('.gallery-grp-btn').forEach(btn => {
       setStatus('show');
       await buildCameraCache();
     }
-    renderGrid(allFiles, allThumbs);
+    renderGrid(allFiles);
   });
 });
 
@@ -789,8 +917,7 @@ document.getElementById('upload-input').addEventListener('change', async e => {
     token = await getAccessToken();
     const newFiles = await listFolder();
     allFiles = sortByDate(newFiles.filter(isMedia));
-    allThumbs = await batchThumbs(allFiles);
-    renderGrid(allFiles, allThumbs);
+    renderGrid(allFiles);
   }, 1200);
 });
 

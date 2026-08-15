@@ -613,6 +613,23 @@ a:hover{
   width: 100%;
   display: block;
   border-radius: .45rem;
+  /* Hasta que carga la miniatura no sabemos la proporción (Dropbox dejó de
+     darla en el listado), así que el hueco empieza cuadrado y se ajusta solo. */
+  aspect-ratio: var(--ar, 1);
+  object-fit: cover;
+}
+.gallery-item--loading{
+  aspect-ratio: 1;
+  background: linear-gradient(100deg, #efeae2 30%, #f7f4ef 50%, #efeae2 70%);
+  background-size: 220% 100%;
+  animation: gallery-shimmer 1.3s linear infinite;
+}
+@keyframes gallery-shimmer{
+  from{ background-position: 120% 0; }
+  to  { background-position: -20% 0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .gallery-item--loading{ animation: none; }
 }
 .gallery-item:hover{ transform: scale(1.02); filter: brightness(1.07); }
 
