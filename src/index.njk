@@ -51,7 +51,7 @@ permalink: "/index.html"
             {% if post.data.hero %}
               <img src="{{ post.data.hero | url }}" class="card-img-top object-fit-cover" alt="{{ post.data.alt or post.data.title }}" loading="lazy">
             {% else %}
-              <img src="https://picsum.photos/800/500?{{ loop.index }}" class="card-img-top object-fit-cover" alt="Imagen" loading="lazy">
+              <img src="{{ '/images/placeholder-hero.svg' | url }}" class="card-img-top object-fit-cover" alt="Ficha sin imagen todavía" loading="lazy">
             {% endif %}
           </div>
           <div class="card-body">
