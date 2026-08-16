@@ -3,8 +3,8 @@ layout: post.njk
 title: "Meteorología — Burgos, agosto 2026"
 excerpt: "Previsión del tiempo para los días del viaje, actualizada en tiempo real con Open-Meteo."
 modulo: "Recursos"
-hero: "/images/placeholder-hero.svg"
-alt: "Imagen pendiente — cielo sobre Burgos"
+hero: "/images/meteo-800.jpg"
+alt: "Un móvil apoyado sobre el mapa ilustrado de la ruta muestra la previsión del tiempo en Burgos: parcialmente nublado, 18 °C, con viento, humedad, probabilidad de lluvia y las próximas horas; alrededor, recortes de sol, nubes y lluvia, una taza de café, una brújula y el cuaderno con el plan del día"
 templateEngineOverride: njk,md
 permalink: /recursos/recursos_meteo/
 ---

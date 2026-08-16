@@ -3,6 +3,8 @@ layout: post.njk
 title: "Restaurantes — Dónde comer"
 excerpt: "Sitios de la agenda para comer en Burgos, Ibeas de Juarros y la ruta de vuelta. Lista abierta, pendiente de completar."
 modulo: "Recursos"
+hero: "/images/restaurantes-800.jpg"
+alt: "Mesa de terraza al atardecer con una copa de vino tinto grabada con la Catedral, una cazuela de guiso, un cesto de pan y un farol encendido; delante, un cuaderno abierto rotulado «Restaurantes en Burgos» junto a una guía gastronómica de la ciudad"
 templateEngineOverride: njk,md
 permalink: /recursos/recursos_restaurantes/
 ---

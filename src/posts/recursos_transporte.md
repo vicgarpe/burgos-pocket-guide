@@ -3,8 +3,8 @@ layout: post.njk
 title: "Transporte — Cómo moverse (Burgos y Atapuerca)"
 excerpt: "Burgos se hace andando; lo único que necesita logística es el día de Atapuerca. Ficha con los puntos clave del viaje."
 modulo: "Recursos"
-hero: "/images/placeholder-hero.svg"
-alt: "Imagen pendiente — mapa del casco histórico de Burgos"
+hero: "/images/transporte-800.jpg"
+alt: "Un plano de Burgos abierto sobre la mesa con chinchetas de estación de tren, aeropuerto, autobús urbano, taxi y bicicleta, y maquetas de un tren, un autobús rojo, una bici y un taxi amarillo encima; al lado, un móvil con una app de transporte, una taza con el perfil de la Catedral y, al fondo, la silueta de la Catedral sobre los tejados"
 templateEngineOverride: njk,md
 permalink: /recursos/recursos_transporte/
 ---
