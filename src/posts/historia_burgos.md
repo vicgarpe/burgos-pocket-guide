@@ -9,8 +9,8 @@ templateEngineOverride: njk,md
 permalink: /historia/historia_burgos/
 ---
 
-*Fichas relacionadas de la agenda:*
-{% wiki "2026-08-18-llegada", "Día 0 — Llegada a Burgos" %} · {% wiki "2026-08-20-regreso", "Día 2 — Mañana en Burgos" %}
+*Fichas relacionadas:*
+{% wiki "2026-08-18-llegada", "Día 0 — Llegada a Burgos" %} · {% wiki "historia_catedral", "La Catedral de Santa María" %}
 
 > ⚠️ **Ficha pendiente de redactar y revisar.** Es un esqueleto: los datos concretos (fechas, nombres, cifras) están **sin verificar** y hay que contrastarlos antes de darlos por buenos.
 
