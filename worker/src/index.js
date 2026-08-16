@@ -296,15 +296,39 @@ Responde ÚNICAMENTE con este JSON sin texto adicional ni backticks:
   "fecha": "<fecha del ticket en formato YYYY-MM-DD, o null si no se puede determinar>",
   "importe": <importe total como número decimal, o null si no se puede determinar>,
   "descripcion": "<nombre del establecimiento o concepto breve, o null>",
-  "confiabilidad_ocr": "<notas sobre la calidad del OCR y fiabilidad de los datos extraídos>"
+  "confiabilidad_ocr": "<en qué línea te has basado para el importe y qué dudas tienes>"
 }
 
-Instrucciones:
-- Para 'importe': busca el total/importe mayor del ticket (normalmente etiquetado como Total, Suma, Importe, etc.)
-- Para 'fecha': busca la fecha de emisión del ticket
-- Para 'descripcion': nombre del comercio, restaurante, tienda u otro concepto breve
-- Para 'confiabilidad_ocr': indica si la imagen es clara, si hay partes ilegibles, si estás seguro de los valores, etc.
-- Si no puedes extraer un valor con razonable confianza, usa null`;
+IMPORTE — es el campo crítico. Es el dinero que ha pagado el cliente por este ticket.
+Localízalo SIEMPRE por su etiqueta, NUNCA por ser la cifra más grande del ticket.
+
+Etiquetas válidas (la línea que buscas es una de estas):
+  TOTAL / TOTAL A PAGAR / IMPORTE TOTAL / TOTAL EUR / TOTAL € / A PAGAR /
+  SUMA / TOTAL TARJETA / TOTAL VISA / PAGADO / COBRADO
+
+Descarta estas líneas aunque su cifra sea mayor que el total:
+  ENTREGADO, EFECTIVO, RECIBIDO, EN METÁLICO — es lo que el cliente puso sobre la barra, no lo que costó.
+  CAMBIO, DEVUELTA, SU CAMBIO — es lo que le devolvieron.
+  SUBTOTAL, BASE IMPONIBLE, IVA, DESCUENTO — son pasos del cálculo, no el resultado.
+  Precios de artículos sueltos, número de ticket o factura, NIF, teléfono,
+  código postal, puntos de fidelidad, saldo acumulado, importes de otras fechas.
+
+Casos particulares:
+  · Si hay descuento, el importe es el de después de restarlo.
+  · Si hay propina o servicio sumados por debajo del total, usa el total final que ya los incluye.
+  · Si aparecen varios totales, quédate con el último de la secuencia de pago.
+  · Devuelve solo el número, con punto decimal y sin símbolo de moneda: 34.50, no "34,50 €".
+  · Si no encuentras ninguna de esas etiquetas y no estás razonablemente seguro, usa null
+    antes que arriesgar una cifra equivocada.
+
+Los demás campos:
+- 'fecha': la fecha de emisión del ticket, no la de caducidad ni la de una promoción.
+  Está en formato español día/mes/año; un año de dos cifras es 20xx.
+- 'descripcion': nombre del comercio, restaurante o tienda. Breve.
+- 'confiabilidad_ocr': una o dos frases. Di literalmente de qué línea has sacado el importe
+  (por ejemplo: "importe tomado de TOTAL A PAGAR 34,50") y advierte si algo quedaba
+  ilegible, torcido o ambiguo. Quien lo lee va a comprobar la cifra de un vistazo.
+- Si no puedes extraer un valor con razonable confianza, usa null.`;
 
   const messages = [
     {
