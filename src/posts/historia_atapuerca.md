@@ -3,8 +3,8 @@ layout: post.njk
 title: "Atapuerca y la evolución humana"
 excerpt: "Ficha de contexto sobre los yacimientos de la Sierra de Atapuerca y lo que se ha encontrado en ellos. Pendiente de redactar."
 modulo: "Historia"
-hero: "/images/placeholder-hero.svg"
-alt: "Imagen pendiente — yacimientos de la Sierra de Atapuerca"
+hero: "/images/atapuerca2-800.jpg"
+alt: "Una excavación arqueológica al aire libre protegida por una gran marquesina metálica: los cortes del terreno dejan a la vista los estratos superpuestos y las cuadrículas de excavación, con el valle boscoso y las sierras al fondo bajo luz de atardecer"
 templateEngineOverride: njk,md
 permalink: /historia/historia_atapuerca/
 ---
@@ -34,4 +34,3 @@ permalink: /historia/historia_atapuerca/
 ## Tareas pendientes
 
 - Redactar el texto y **verificar cada dato** antes de publicarlo.
-- Añadir imagen propia y sustituir el placeholder del `hero`.

@@ -3,8 +3,8 @@ layout: post.njk
 title: "La Catedral de Santa María"
 excerpt: "Ocho siglos de obra en una sola iglesia: el gótico francés de 1221, las agujas caladas, el cimborrio que se derrumbó y la tumba del Cid. Y qué mirar cuando entréis."
 modulo: "Historia"
-hero: "/images/placeholder-hero.svg"
-alt: "Imagen pendiente — Catedral de Santa María de Burgos"
+hero: "/images/catedral-800.jpg"
+alt: "La Catedral de Burgos vista desde lo alto del cerro al atardecer: las dos agujas caladas de la fachada y el cimborrio del crucero se levantan sobre los tejados rojos del casco histórico, con la meseta y las montañas al fondo"
 templateEngineOverride: njk,md
 permalink: /historia/historia_catedral/
 ---
@@ -115,4 +115,3 @@ Audioguía **1 €**; hay guía multimedia gratuita por QR en el móvil.
   la franja gratuita en mayo: es un dato que se ha movido dos veces este año.
 - Comprobar que la **Capilla del Condestable** y la **Escalera Dorada** están accesibles y sin
   restauración en agosto de 2026.
-- Añadir foto propia y sustituir el placeholder del `hero`.

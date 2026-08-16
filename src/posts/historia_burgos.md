@@ -3,8 +3,8 @@ layout: post.njk
 title: "Burgos: ciudad, Castilla y Camino"
 excerpt: "Ficha de contexto sobre la ciudad: origen en el cerro del Castillo, capitalidad castellana y el Camino de Santiago. Pendiente de redactar."
 modulo: "Historia"
-hero: "/images/placeholder-hero.svg"
-alt: "Imagen pendiente — casco histórico de Burgos"
+hero: "/images/burgos-mapa-800.jpg"
+alt: "Mapa ilustrado titulado «Ruta cultural Burgos y Atapuerca» extendido sobre una mesa de madera, con chinchetas en la Catedral de Burgos, el Museo de Burgos, el Museo de la Evolución Humana y Atapuerca unidas por una línea de puntos; dos manos señalan los extremos, junto a una cámara de fotos y un cuaderno con el plan del día"
 templateEngineOverride: njk,md
 permalink: /historia/historia_burgos/
 ---
@@ -31,4 +31,3 @@ permalink: /historia/historia_burgos/
 ## Tareas pendientes
 
 - Redactar el texto y **verificar cada dato** antes de publicarlo.
-- Añadir imagen propia y sustituir el placeholder del `hero`.
