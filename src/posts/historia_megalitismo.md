@@ -3,8 +3,8 @@ layout: post.njk
 title: "Los dólmenes de Burgos — 5.000 años"
 excerpt: "Por qué la provincia de Burgos guarda uno de los mayores conjuntos dolménicos de Europa, qué dolmen veremos camino de casa y cómo encaja con Atapuerca."
 modulo: "Historia"
-hero: "/images/placeholder-hero.svg"
-alt: "Imagen pendiente — dolmen de corredor en la meseta burgalesa"
+hero: "/images/dolmen_de_cubillejo-800.jpg"
+alt: "El corredor del dolmen de Cubillejo de Lara: dos hileras de ortostatos de caliza cubiertos de líquenes flanquean un pasillo de grava que lleva hasta la cámara funeraria, bajo un cielo nublado"
 templateEngineOverride: njk,md
 permalink: /historia/historia_megalitismo/
 ---
@@ -123,4 +123,4 @@ modernas**. Se iza una cada año al terminar la campaña de excavación. No son 
 ## Tareas pendientes
 
 - **Verificar el apartado de la conexión con Atapuerca** antes de darlo por bueno.
-- Añadir imagen propia y sustituir el placeholder del `hero` (mejor, una foto del dolmen tomada el día 20).
+- Si el día 20 sale una foto mejor del dolmen (con luz de agosto y con el grupo), sustituir el `hero`.
