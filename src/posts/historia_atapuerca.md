@@ -11,6 +11,7 @@ permalink: /historia/historia_atapuerca/
 
 *Fichas relacionadas de la agenda:*
 {% wiki "2026-08-19-atapuerca", "Día 1 — Yacimientos de Atapuerca" %}
+{% wiki "historia_megalitismo", "Los dólmenes de Burgos — 5.000 años" %}
 
 > ⚠️ **Ficha pendiente de redactar y revisar.** Es un esqueleto: las cifras, dataciones y nombres de especies están **sin verificar** y hay que contrastarlos con las fuentes antes de darlos por buenos.
 
