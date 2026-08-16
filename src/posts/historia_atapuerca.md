@@ -105,8 +105,9 @@ Conviene ir sabiéndolo para no llevarse un chasco:
 - **En la sierra** se ve la **trinchera** y los cortes de los yacimientos: estratos, cuadrículas y
   los huecos de donde se sacó todo. Se ve el **contexto**, que es lo que no cabe en una vitrina.
 - **Los fósiles originales** —Miguelón, Excalibur, la mandíbula de la Sima del Elefante— están en el
-  **Museo de la Evolución Humana**, en Burgos. Por eso el plan del día 19 tiene sentido en ese orden:
-  primero el agujero, después lo que salió de él.
+  **Museo de la Evolución Humana**, en Burgos. Como el pase guiado es a las 15:00, el día 19 se hace
+  al revés de lo habitual: **primero el museo y después el agujero**. Se agradece, en realidad —
+  llegáis a la trinchera sabiendo ya qué salió de ella.
 - El **CAREX** es la tercera pata: arqueología experimental, o sea cómo se tallaba, cómo se hacía
   fuego, cómo se cazaba. Es la parte que mejor funciona con gente que no viene leída.
 
