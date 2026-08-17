@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "eleventy --input=src && node scripts/encrypt-galeria.mjs && node scripts/encrypt-finanzas.mjs",
+        "build": "eleventy --input=src && node scripts/encrypt-galeria.mjs && node scripts/encrypt-finanzas.mjs && node scripts/encrypt-docu-reservas.mjs",
         "serve": "eleventy --serve --watch --input=src",
         "clean": "rm -rf _site"
     },

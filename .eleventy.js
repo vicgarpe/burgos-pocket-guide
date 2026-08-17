@@ -81,6 +81,17 @@ export default function(eleventyConfig) {
   ${txt}</a>`;
   });
 
+  // --- Shortcode docureservas: botón que enlaza al módulo de documentos ---
+  eleventyConfig.addNunjucksShortcode("docureservas", (label) => {
+    const txt  = _escapeHtml(label || "Abrir Documentos");
+    const href = PATH_PREFIX + "docu-reservas/";
+    return `<a class="gallery-upload-btn" href="${href}">
+  <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM9 5V1.5L13.5 6H10a1 1 0 0 1-1-1zM4.5 9h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0-5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1z"/>
+  </svg>
+  ${txt}</a>`;
+  });
+
   // --- Shortcode timeline: línea de tiempo del día (widgets de agenda) ---
   eleventyConfig.addNunjucksShortcode("timeline", (date) => {
     return `<div class="timeline-widget" data-date="${_escapeHtml(date || '')}"></div>`;

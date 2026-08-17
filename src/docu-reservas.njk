@@ -1,0 +1,691 @@
+---
+layout: base.njk
+title: "Documentos y reservas — Guía de Burgos"
+permalink: /docu-reservas/index.html
+---
+
+{% gate %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h2 class="module-title mb-0">Documentos</h2>
+  <div class="d-flex gap-2 align-items-center">
+    <button class="gallery-action-btn gallery-cancel-btn d-none" id="doc-cancel-btn">✕ Cancelar</button>
+    <button class="gallery-action-btn gallery-download-btn d-none" id="doc-download-btn" disabled>
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+      </svg>
+      Bajar<span id="doc-dl-count"></span>
+    </button>
+    <button class="gallery-action-btn gallery-share-btn d-none" id="doc-share-btn" disabled>
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5z"/>
+      </svg>
+      Compartir<span id="doc-sh-count"></span>
+    </button>
+    <label class="gallery-upload-btn d-none" id="doc-upload-label" for="doc-upload-input">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+        <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+      </svg>
+      Subir
+    </label>
+    <input type="file" id="doc-upload-input"
+           accept=".pdf,.txt,.md,.org,.doc,.docx,.xls,.xlsx,application/pdf,text/plain,text/markdown"
+           multiple class="d-none">
+  </div>
+</div>
+
+<div id="doc-progress" class="mb-3 d-none">
+  <div class="progress" style="height:5px">
+    <div id="doc-bar" class="progress-bar" style="width:0%;background:var(--accent)"></div>
+  </div>
+  <p id="doc-progress-label" class="small text-muted mt-1 mb-0"></p>
+</div>
+
+<div id="doc-group-selector" class="gallery-grp-sel mb-3 d-none">
+  <button class="gallery-grp-btn active" data-group="day">Fecha</button>
+  <button class="gallery-grp-btn" data-group="type">Tipo</button>
+  <button class="gallery-grp-btn" data-group="none">Todos</button>
+</div>
+
+<div id="doc-select-all-bar" class="d-none mb-2" style="font-family:var(--font-sans);font-size:.85rem;">
+  <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;color:var(--muted)">
+    <input type="checkbox" id="doc-select-all" style="accent-color:var(--accent);width:1rem;height:1rem;">
+    Seleccionar todos los documentos
+  </label>
+</div>
+
+<div id="doc-status" class="text-center py-5">
+  <div class="spinner-border text-secondary" role="status" style="width:2rem;height:2rem"></div>
+  <p class="mt-3 text-muted small">Conectando con Dropbox…</p>
+</div>
+
+<div id="doc-error" class="alert d-none" role="alert"
+     style="border:1px solid var(--rule);background:#fff9f7;color:#7a3523;border-radius:.65rem"></div>
+
+<div id="doc-empty" class="text-center py-5 d-none">
+  <p class="text-muted">No hay documentos todavía. Sube la primera reserva.</p>
+</div>
+
+<div id="doc-list" class="doc-list d-none"></div>
+
+<script>
+const DROPBOX = {
+  appKey:       '{{ dropbox.appKey }}',
+  appSecret:    '{{ dropbox.appSecret }}',
+  refreshToken: '{{ dropbox.refreshToken }}',
+  folder:       '{{ dropbox.folder }}'
+};
+const UPLOAD = {
+  chunkThreshold: {{ galeria.uploadChunkThreshold }} * 1024 * 1024,
+  partSize:       {{ galeria.uploadPartSize }} * 1024 * 1024
+};
+
+// Las extensiones que este módulo considera "documento". Todo lo demás
+// (fotos y vídeos) se lo queda la Galería, que comparte carpeta de Dropbox.
+const DOC_RE = /\.(pdf|txt|md|org|docx?|xlsx?)$/i;
+
+let token = null;
+let allDocs = [];
+let isSelectMode = false;
+let selectedDocs = new Set();
+let wasLongPress = false;
+let currentGroupBy = 'day';
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+
+// Mismos eventos que usa la Galería: 'authed' al meter la contraseña,
+// 'unlocked' cuando ya estaba desbloqueado de antes en este navegador.
+document.addEventListener('viaje:authed',   initDocs);
+document.addEventListener('viaje:unlocked', initDocs);
+
+async function initDocs() {
+  try {
+    token = await getAccessToken();
+    const entries = await listFolder();
+    allDocs = sortByDate(entries.filter(isDoc));
+    if (!allDocs.length) {
+      setStatus('hide');
+      document.getElementById('doc-empty').classList.remove('d-none');
+      document.getElementById('doc-upload-label').classList.remove('d-none');
+      return;
+    }
+    setStatus('hide');
+    document.getElementById('doc-group-selector').classList.remove('d-none');
+    document.getElementById('doc-upload-label').classList.remove('d-none');
+    renderList(allDocs);
+  } catch (err) {
+    showError(err.message || 'No se pudo cargar la lista de documentos.');
+  }
+}
+
+// ─── Dropbox API ─────────────────────────────────────────────────────────────
+
+async function getAccessToken() {
+  const r = await fetch('https://api.dropboxapi.com/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type:    'refresh_token',
+      refresh_token: DROPBOX.refreshToken,
+      client_id:     DROPBOX.appKey,
+      client_secret: DROPBOX.appSecret
+    })
+  });
+  const d = await r.json();
+  if (!d.access_token) throw new Error('No se pudo conectar con Dropbox');
+  return d.access_token;
+}
+
+async function dbxJSON(url, body) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+async function listFolder() {
+  let entries = [];
+  let d = await dbxJSON('https://api.dropboxapi.com/2/files/list_folder', {
+    path: DROPBOX.folder, limit: 200
+  });
+  entries = entries.concat(d.entries || []);
+  while (d.has_more) {
+    d = await dbxJSON('https://api.dropboxapi.com/2/files/list_folder/continue', { cursor: d.cursor });
+    entries = entries.concat(d.entries || []);
+  }
+  return entries;
+}
+
+function isDoc(f) {
+  return f['.tag'] === 'file' && DOC_RE.test(f.name);
+}
+
+function extOf(name) {
+  const m = name.match(/\.([^.]+)$/);
+  return m ? m[1].toLowerCase() : '';
+}
+
+function sortByDate(files) {
+  // Más recientes arriba: una reserva nueva es la que interesa.
+  return files.sort((a, b) => (b.client_modified || '').localeCompare(a.client_modified || ''));
+}
+
+async function getTempLink(path) {
+  const d = await dbxJSON('https://api.dropboxapi.com/2/files/get_temporary_link', { path });
+  if (!d.link) throw new Error('No se pudo obtener el enlace');
+  return d.link;
+}
+
+// ─── Miniaturas ──────────────────────────────────────────────────────────────
+// Dropbox sabe generar una vista previa de la primera página de un PDF y de los
+// ofimáticos. Para txt/md/org no, así que esos se quedan con su distintivo.
+
+const THUMB_SIZE  = 'w480h320';
+const THUMB_CACHE = 'bgp-docs-v1';
+const THUMBABLE   = /\.(pdf|docx?|xlsx?)$/i;
+
+let   thumbCache = undefined;
+const thumbURLs  = {};
+const thumbAsked = new Set();
+const docsByPath = new Map();
+let   thumbObserver = null;
+
+async function getThumbCache() {
+  if (thumbCache !== undefined) return thumbCache;
+  try { thumbCache = await caches.open(THUMB_CACHE); }
+  catch { thumbCache = null; }
+  return thumbCache;
+}
+
+function thumbKey(file) {
+  return `https://miniaturas.local/doc/${THUMB_SIZE}/${file.content_hash || file.rev}`;
+}
+
+async function fetchThumb(file) {
+  const r = await fetch('https://content.dropboxapi.com/2/files/get_thumbnail_v2', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Dropbox-API-Arg': JSON.stringify({
+        resource: { '.tag': 'path', path: file.path_lower },
+        format: 'jpeg', size: THUMB_SIZE
+      })
+    }
+  });
+  if (!r.ok) throw new Error('sin miniatura');
+  return r.blob();
+}
+
+async function loadThumb(file) {
+  const path = file.path_lower;
+  if (thumbAsked.has(path)) return;
+  thumbAsked.add(path);
+
+  const cache = await getThumbCache();
+  const key   = thumbKey(file);
+
+  if (cache) {
+    const hit = await cache.match(key);
+    if (hit) { applyThumb(path, URL.createObjectURL(await hit.blob())); return; }
+  }
+  try {
+    const blob = await fetchThumb(file);
+    if (cache) await cache.put(key, new Response(blob.slice(), { headers: { 'Content-Type': 'image/jpeg' } }));
+    applyThumb(path, URL.createObjectURL(blob));
+  } catch {
+    /* se queda con el distintivo de extensión, que ya está pintado */
+  }
+}
+
+function applyThumb(path, url) {
+  thumbURLs[path] = url;
+  const card = document.querySelector(`.doc-card[data-path="${CSS.escape(path)}"]`);
+  if (!card) return;
+  const box = card.querySelector('.doc-card-thumb');
+  if (!box) return;
+  const img = new Image();
+  img.alt = '';
+  img.onload = () => { box.classList.add('doc-card-thumb--img'); box.replaceChildren(img); };
+  img.src = url;
+}
+
+function ensureObserver() {
+  if (thumbObserver) thumbObserver.disconnect();
+  thumbObserver = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      thumbObserver.unobserve(e.target);
+      const file = docsByPath.get(e.target.dataset.path);
+      if (file) loadThumb(file);
+    }
+  }, { rootMargin: '600px 0px' });
+  return thumbObserver;
+}
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+
+function fmtSize(bytes) {
+  return bytes < 1024 * 1024
+    ? Math.round(bytes / 1024) + ' KB'
+    : (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  try {
+    return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+      .format(new Date(iso));
+  } catch { return iso.slice(0, 10); }
+}
+
+function groupKey(file, groupBy) {
+  if (groupBy === 'day')  return (file.client_modified || '').slice(0, 10);
+  if (groupBy === 'type') return extOf(file.name);
+  return '';
+}
+
+function groupLabel(key, groupBy) {
+  if (groupBy === 'type') return key.toUpperCase();
+  if (!key) return 'Sin fecha';
+  return fmtDate(key + 'T00:00:00');
+}
+
+function makeCard(file, idx) {
+  const ext  = extOf(file.name);
+  const card = document.createElement('article');
+  card.className = 'doc-card';
+  card.dataset.idx  = idx;
+  card.dataset.path = file.path_lower;
+
+  const thumb = document.createElement('div');
+  thumb.className = `doc-card-thumb doc-ext--${ext}`;
+  thumb.dataset.ext = ext;
+  const badge = document.createElement('span');
+  badge.className = 'doc-card-ext';
+  badge.textContent = ext.toUpperCase();
+  thumb.appendChild(badge);
+
+  const body = document.createElement('div');
+  body.className = 'doc-card-body';
+  const name = document.createElement('p');
+  name.className = 'doc-card-name';
+  name.textContent = file.name;
+  const meta = document.createElement('p');
+  meta.className = 'doc-card-meta';
+  meta.textContent = `${fmtSize(file.size)} · ${fmtDate(file.client_modified)}`;
+  body.append(name, meta);
+
+  card.append(thumb, body);
+
+  // Pulsación larga → modo selección, como en la galería
+  let pressTimer = null;
+  const startPress = () => {
+    wasLongPress = false;
+    pressTimer = setTimeout(() => { wasLongPress = true; enterSelectMode(idx); }, 500);
+  };
+  const cancelPress = () => clearTimeout(pressTimer);
+  card.addEventListener('pointerdown', startPress);
+  card.addEventListener('pointerup', cancelPress);
+  card.addEventListener('pointerleave', cancelPress);
+  card.addEventListener('contextmenu', e => { if (isSelectMode) e.preventDefault(); });
+
+  card.addEventListener('click', async () => {
+    if (wasLongPress) { wasLongPress = false; return; }
+    if (isSelectMode) { toggleSelect(idx); return; }
+    await openDoc(file);
+  });
+
+  return card;
+}
+
+function renderList(files) {
+  const list = document.getElementById('doc-list');
+  list.replaceChildren();
+  docsByPath.clear();
+  files.forEach(f => docsByPath.set(f.path_lower, f));
+  const obs = ensureObserver();
+
+  const idxOf = new Map(files.map((f, i) => [f.path_lower, i]));
+
+  const render = (arr) => {
+    const grid = document.createElement('div');
+    grid.className = 'doc-grid';
+    arr.forEach(f => {
+      const card = makeCard(f, idxOf.get(f.path_lower));
+      grid.appendChild(card);
+      if (THUMBABLE.test(f.name)) obs.observe(card);
+    });
+    return grid;
+  };
+
+  if (currentGroupBy === 'none') {
+    list.appendChild(render(files));
+  } else {
+    const buckets = new Map();
+    files.forEach(f => {
+      const k = groupKey(f, currentGroupBy);
+      if (!buckets.has(k)) buckets.set(k, []);
+      buckets.get(k).push(f);
+    });
+    for (const [k, arr] of buckets) {
+      const h = document.createElement('h3');
+      h.className = 'doc-group-title';
+      h.textContent = groupLabel(k, currentGroupBy);
+      list.append(h, render(arr));
+    }
+  }
+
+  list.classList.remove('d-none');
+  if (isSelectMode) updateSelectUI();
+}
+
+async function openDoc(file) {
+  // Se abre una pestaña en blanco antes del await: si no, Safari la bloquea.
+  const w = window.open('', '_blank');
+  try {
+    const link = await getTempLink(file.path_lower);
+    if (w) w.location = link; else window.location = link;
+  } catch (err) {
+    if (w) w.close();
+    alert(`No se pudo abrir ${file.name}: ${err.message}`);
+  }
+}
+
+// ─── Selección ───────────────────────────────────────────────────────────────
+
+const canShare = !!(navigator.share && (
+  typeof navigator.canShare !== 'function' ||
+  navigator.canShare({ files: [new File([], 'test.pdf', { type: 'application/pdf' })] })
+));
+
+function enterSelectMode(idx) {
+  isSelectMode = true;
+  selectedDocs = new Set([idx]);
+  document.getElementById('doc-list').classList.add('selecting');
+  document.getElementById('doc-group-selector').classList.add('d-none');
+  document.getElementById('doc-select-all-bar').classList.remove('d-none');
+  document.getElementById('doc-cancel-btn').classList.remove('d-none');
+  document.getElementById('doc-download-btn').classList.remove('d-none');
+  if (canShare) document.getElementById('doc-share-btn').classList.remove('d-none');
+  document.getElementById('doc-upload-label').classList.add('d-none');
+  updateSelectUI();
+}
+
+function exitSelectMode() {
+  isSelectMode = false;
+  selectedDocs.clear();
+  document.getElementById('doc-list').classList.remove('selecting');
+  document.getElementById('doc-group-selector').classList.remove('d-none');
+  document.getElementById('doc-select-all-bar').classList.add('d-none');
+  document.getElementById('doc-select-all').checked = false;
+  document.querySelectorAll('.doc-card--selected').forEach(el => el.classList.remove('doc-card--selected'));
+  document.getElementById('doc-cancel-btn').classList.add('d-none');
+  const dl = document.getElementById('doc-download-btn'); dl.classList.add('d-none'); dl.disabled = true;
+  const sh = document.getElementById('doc-share-btn');    sh.classList.add('d-none'); sh.disabled = true;
+  document.getElementById('doc-upload-label').classList.remove('d-none');
+}
+
+function toggleSelect(idx) {
+  if (selectedDocs.has(idx)) selectedDocs.delete(idx);
+  else selectedDocs.add(idx);
+  updateSelectUI();
+}
+
+function updateSelectUI() {
+  document.querySelectorAll('.doc-card[data-idx]').forEach(el => {
+    el.classList.toggle('doc-card--selected', selectedDocs.has(parseInt(el.dataset.idx)));
+  });
+  document.getElementById('doc-select-all').checked = selectedDocs.size === allDocs.length;
+  const n = selectedDocs.size;
+  const dl = document.getElementById('doc-download-btn');
+  dl.disabled = n === 0;
+  document.getElementById('doc-dl-count').textContent = n > 0 ? ` (${n})` : '';
+  const sh = document.getElementById('doc-share-btn');
+  sh.disabled = n === 0;
+  document.getElementById('doc-sh-count').textContent = n > 0 ? ` (${n})` : '';
+}
+
+document.getElementById('doc-cancel-btn').addEventListener('click', exitSelectMode);
+document.getElementById('doc-select-all').addEventListener('change', e => {
+  if (e.target.checked) allDocs.forEach((_, i) => selectedDocs.add(i));
+  else selectedDocs.clear();
+  updateSelectUI();
+});
+
+document.querySelectorAll('#doc-group-selector .gallery-grp-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.group === currentGroupBy) return;
+    currentGroupBy = btn.dataset.group;
+    document.querySelectorAll('#doc-group-selector .gallery-grp-btn')
+      .forEach(b => b.classList.toggle('active', b === btn));
+    if (allDocs.length) renderList(allDocs);
+  });
+});
+
+// ─── Descarga y compartir ────────────────────────────────────────────────────
+
+const MIME = {
+  pdf: 'application/pdf', txt: 'text/plain', md: 'text/markdown', org: 'text/plain',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+};
+
+document.getElementById('doc-download-btn').addEventListener('click', async () => {
+  const files = [...selectedDocs].sort((a, b) => a - b).map(i => allDocs[i]);
+  const progress = document.getElementById('doc-progress');
+  const bar      = document.getElementById('doc-bar');
+  const label    = document.getElementById('doc-progress-label');
+  progress.classList.remove('d-none');
+  bar.style.width = '0%';
+  spinStart(label, `Preparando descarga de ${files.length} documento${files.length > 1 ? 's' : ''}…`);
+
+  for (let i = 0; i < files.length; i++) {
+    const file  = files[i];
+    const base  = Math.round((i / files.length) * 100);
+    const range = Math.round(100 / files.length);
+    try {
+      spinText(`${file.name} — obteniendo enlace…`);
+      const link = await getTempLink(file.path_lower);
+      await downloadBlob(file.name, link, pct => {
+        bar.style.width = `${base + Math.round(pct * range / 100)}%`;
+        spinText(`${file.name} — ${pct}%`);
+      });
+    } catch (err) {
+      spinText(`${file.name} — Error: ${err.message}`);
+    }
+  }
+
+  spinStop();
+  bar.style.width = '100%';
+  label.textContent = '✓  Descarga completada';
+  setTimeout(() => { progress.classList.add('d-none'); exitSelectMode(); }, 2000);
+});
+
+document.getElementById('doc-share-btn').addEventListener('click', async () => {
+  const files = [...selectedDocs].sort((a, b) => a - b).map(i => allDocs[i]);
+  const progress = document.getElementById('doc-progress');
+  const bar      = document.getElementById('doc-bar');
+  const label    = document.getElementById('doc-progress-label');
+  progress.classList.remove('d-none');
+  bar.style.width = '0%';
+  spinStart(label, `Preparando ${files.length} documento${files.length > 1 ? 's' : ''} para compartir…`);
+
+  const shareFiles = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    try {
+      spinText(`${file.name} — obteniendo enlace…`);
+      const link = await getTempLink(file.path_lower);
+      const r    = await fetch(link);
+      bar.style.width = `${Math.round(100 * (i + 1) / files.length)}%`;
+      const blob = await r.blob();
+      const mime = blob.type || MIME[extOf(file.name)] || 'application/octet-stream';
+      shareFiles.push(new File([blob], file.name, { type: mime }));
+    } catch (err) {
+      spinStop();
+      progress.classList.add('d-none');
+      alert(`Error al preparar ${file.name}: ${err.message}`);
+      return;
+    }
+  }
+
+  spinStop();
+  progress.classList.add('d-none');
+  try {
+    await navigator.share({ files: shareFiles });
+  } catch (err) {
+    if (err.name !== 'AbortError') alert(`No se pudo compartir: ${err.message}`);
+  }
+});
+
+function downloadBlob(name, url, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.responseType = 'blob';
+    xhr.onprogress = ev => { if (ev.lengthComputable) onProgress(Math.round(ev.loaded / ev.total * 100)); };
+    xhr.onload = () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(xhr.response);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      resolve();
+    };
+    xhr.onerror = () => reject(new Error('Error de red'));
+    xhr.open('GET', url);
+    xhr.send();
+  });
+}
+
+// ─── Subida ──────────────────────────────────────────────────────────────────
+
+const _spin = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+let _spinTimer = null, _spinIdx = 0, _spinLabel = null, _spinText = '';
+
+function spinStart(labelEl, text) {
+  _spinLabel = labelEl; _spinText = text; _spinIdx = 0;
+  _spinTimer = setInterval(() => {
+    _spinLabel.textContent = _spin[_spinIdx++ % _spin.length] + '  ' + _spinText;
+  }, 100);
+}
+function spinText(text) { _spinText = text; }
+function spinStop()     { clearInterval(_spinTimer); _spinTimer = null; }
+
+document.getElementById('doc-upload-input').addEventListener('change', async e => {
+  const chosen = Array.from(e.target.files);
+  if (!chosen.length) return;
+
+  // Se rechaza aquí lo que la Galería debería llevarse, para no ensuciar.
+  const files    = chosen.filter(f => DOC_RE.test(f.name));
+  const rejected = chosen.filter(f => !DOC_RE.test(f.name));
+  if (rejected.length) {
+    alert(`Estos no son documentos y no se han subido:\n\n${rejected.map(f => '· ' + f.name).join('\n')}\n\nLas fotos y vídeos van en la Galería.`);
+  }
+  if (!files.length) { e.target.value = ''; return; }
+
+  const progress = document.getElementById('doc-progress');
+  const bar      = document.getElementById('doc-bar');
+  const label    = document.getElementById('doc-progress-label');
+  progress.classList.remove('d-none');
+  bar.style.width = '0%';
+  spinStart(label, `Preparando ${files.length === 1 ? files[0].name : files.length + ' documentos'}…`);
+
+  for (let i = 0; i < files.length; i++) {
+    const base  = Math.round((i / files.length) * 100);
+    const range = Math.round(100 / files.length);
+    try {
+      await uploadFile(files[i],
+        pct  => { bar.style.width = `${base + Math.round(pct * range / 100)}%`; },
+        text => { spinText(text); });
+    } catch (err) {
+      spinText(`${files[i].name} — Error: ${err.message}`);
+    }
+  }
+
+  spinStop();
+  bar.style.width = '100%';
+  label.textContent = '✓  Subida completada. Actualizando…';
+  e.target.value = '';
+
+  setTimeout(async () => {
+    progress.classList.add('d-none');
+    document.getElementById('doc-list').classList.add('d-none');
+    document.getElementById('doc-empty').classList.add('d-none');
+    setStatus('show');
+    token = await getAccessToken();
+    allDocs = sortByDate((await listFolder()).filter(isDoc));
+    setStatus('hide');
+    document.getElementById('doc-group-selector').classList.remove('d-none');
+    renderList(allDocs);
+  }, 1200);
+});
+
+async function safeDestPath(name) {
+  const base = name.replace(/(\.[^.]+)$/, '');
+  const ext  = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
+  let candidate = DROPBOX.folder + '/' + name;
+  let n = 1;
+  while (true) {
+    const r = await dbxJSON('https://api.dropboxapi.com/2/files/get_metadata', { path: candidate });
+    if (r['.tag'] === 'file' || r['.tag'] === 'folder') {
+      candidate = `${DROPBOX.folder}/${base} (${n++})${ext}`;
+    } else {
+      return candidate;
+    }
+  }
+}
+
+function uploadSingle(file, destPath, onProgress, onStatus) {
+  return new Promise((resolve, reject) => {
+    onStatus(`${file.name} [${fmtSize(file.size)}] — subiendo…`);
+    const xhr = new XMLHttpRequest();
+    xhr.upload.onprogress = ev => {
+      if (ev.lengthComputable) {
+        const pct = Math.round(ev.loaded / ev.total * 100);
+        onProgress(pct);
+        onStatus(`${file.name} [${fmtSize(file.size)}] — ${pct}%`);
+      }
+    };
+    xhr.onload = () => {
+      const d = JSON.parse(xhr.responseText);
+      if (d.error_summary) reject(new Error(d.error_summary));
+      else resolve(d);
+    };
+    xhr.onerror = () => reject(new Error('Error de red'));
+    xhr.open('POST', 'https://content.dropboxapi.com/2/files/upload');
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    xhr.setRequestHeader('Dropbox-API-Arg', JSON.stringify({ path: destPath, mode: 'add', autorename: true, mute: false }));
+    xhr.send(file);
+  });
+}
+
+async function uploadFile(file, onProgress, onStatus) {
+  onStatus(`${file.name} — comprobando nombre…`);
+  const destPath = await safeDestPath(file.name);
+  if (destPath !== DROPBOX.folder + '/' + file.name) {
+    onStatus(`${file.name} — duplicado, se guardará como "${destPath.split('/').pop()}"`);
+  }
+  // Un documento nunca va a pasar del umbral de troceado, así que basta la
+  // subida simple; si algún día lo hace, Dropbox devuelve el error y se ve.
+  await uploadSingle(file, destPath, onProgress, onStatus);
+}
+
+// ─── Util ────────────────────────────────────────────────────────────────────
+
+function setStatus(mode) {
+  document.getElementById('doc-status').classList.toggle('d-none', mode === 'hide');
+}
+function showError(msg) {
+  setStatus('hide');
+  const el = document.getElementById('doc-error');
+  el.textContent = msg;
+  el.classList.remove('d-none');
+}
+</script>
+{% endgate %}
