@@ -9,7 +9,7 @@ templateEngineOverride: njk,md
 permalink: /recursos/recursos_transporte/
 ---
 
-> ⚠️ **Ficha a medio hacer.** Lo marcado como *pendiente* hay que confirmarlo. La parte de **aparcamiento sí está verificada** con fuentes, ver abajo.
+> ⚠️ **Ficha a medio hacer.** Lo marcado como *pendiente* hay que confirmarlo. La parte de **aparcamiento está confirmada por el propio alojamiento** en el check-in del 17/08/2026, y contrastada con fuentes.
 
 ## A pie
 
@@ -19,48 +19,58 @@ El casco histórico de Burgos es pequeño y llano junto al río: **Catedral, Esp
 
 Vais **dos coches** y os quedáis **tres días**, así que esto merece leerse antes de salir de Valencia.
 
-### 1. La ZBE: qué es y qué no
+### 1. Lo que dice el alojamiento (es la fuente buena)
 
-Burgos tiene **Zona de Bajas Emisiones desde agosto de 2025**. Abarca 98 calles del casco histórico, con 31 puntos de control y 36 cámaras lectoras de matrículas — y **la calle Fernán González es uno de los puntos con cámara**.
+El check-in online está hecho: **martes 18 a las 15:00**, Fernán González 34, piso 3D. Con él llegaron sus instrucciones de llegada, que mandan sobre cualquier cosa que hayamos leído por internet:
 
-Pero conviene entender bien la letra pequeña:
+- **No se accede en coche hasta el portal.** Es calle peatonal del casco histórico: se aparca y se sube andando con las maletas.
+- **Zona gratuita, sin ticket**: Calle **Fernán González 31** o Calle **Cabestreros**.
+- **Parking Plaza Mayor** con **ticket descuento suyo a 15 € el día**.
 
-- **No es una prohibición de entrar: es una restricción por etiqueta ambiental.** Pueden circular los vehículos con distintivo **0, ECO, C y B**. Mirad qué etiqueta lleva cada coche antes de salir.
-- **No se multa todavía.** Hay moratoria de sanciones **hasta el 6 de agosto de 2027**; hasta entonces solo se emiten avisos informativos.
-- **Hay autorización expresa para clientes de hoteles y apartamentos turísticos.** Es la vía limpia: preguntad al alojamiento al confirmar el check-in si tramita el permiso o cómo se solicita.
+### 2. El descuento del Parking Plaza Mayor, paso a paso
 
-> **En la práctica:** podéis acercaros a la puerta a descargar las maletas. Lo que no conviene es dejar los coches dando vueltas por el casco.
+Cubierto, vigilado 24 h y a un paso de la Catedral. La **tarifa pública máxima es de 19,50 € al día**, así que el descuento ahorra 4,50 € por coche y día.
 
-### 2. Dónde NO dejar los coches tres días
+1. Entrar al parking y **coger el ticket normal**.
+2. **Avisar al alojamiento** de que necesitáis el descuento.
+3. Recogerlo: lo dejan en el apartamento, o se recoge en su almacén de **Calle San Carlos 4, bajo**.
+4. Al salir, **validar el descuento en la máquina**: allí no se paga nada.
+5. Los **15 € se pagan directamente a su compañera**.
 
-⚠️ **En el entorno del Castillo.** Es la recomendación que circula por internet —gratis, 24 h y cerca— pero hay **denuncias reiteradas de robos y lunas rotas a plena luz del día**: un caso documentado de coche reventado tras veinte minutos de visita, a las cuatro de la tarde.
+{% gmap "Parking Plaza Mayor, Burgos", "Parking Plaza Mayor — vigilado, 15 €/día con descuento" %}
 
-Con dos coches cargados y tres noches, no compensa. Para subir un rato al mirador vale; para dejarlos aparcados el fin de semana, no.
+### 3. La ZBE: qué es y qué no
 
-### 3. Las dos opciones buenas
+Burgos tiene **Zona de Bajas Emisiones desde agosto de 2025**. Abarca 98 calles del casco histórico, con 31 puntos de control y 36 cámaras lectoras de matrículas — y **la calle Fernán González es una de ellas**.
 
-**Gratis y lejos — Parking disuasorio Antigua Estación**
-Bulevar Ferroviario 2. Es el mismo que a veces aparece como «parking del Bulevar». **180 plazas**, gratuito, abierto 24 h, asfaltado y señalizado. Unos **15 minutos andando** hasta la Catedral. No está vigilado, así que no dejéis nada a la vista.
+Pero la letra pequeña la desdramatiza bastante:
 
-{% gmap "Parking gratuito disuasorio Antigua Estacion, Bulevar Ferroviario 2, Burgos", "Antigua Estación — gratuito, 180 plazas" %}
+- **El acceso a los aparcamientos públicos está garantizado.** Entrar a Plaza Mayor es una vía limpia, no una infracción.
+- **No es una prohibición de entrar: es una restricción por etiqueta.** Pasan los distintivos **0, ECO, C y B**. Mirad qué lleva cada coche antes de salir.
+- **No se multa todavía.** Moratoria de sanciones **hasta el 6 de agosto de 2027**; hasta entonces solo avisos informativos.
 
-**De pago y seguro — Parking Catedral / Plaza Vega**
-Subterráneo de Interparking, abierto 24 h y **vigilado**, a menos de cinco minutos andando de la Catedral y del alojamiento. Ronda los **10–18 € por coche y día** según tarifa (confirmadlo en la máquina). Para dos coches y dos noches sale entre 40 y 70 €: es el precio de no pensar en ello.
+### 4. La zona gratuita, con un matiz nuestro
 
-{% gmap "Parking Catedral Plaza de Vega, Burgos", "Catedral–Plaza Vega — vigilado, 24 h" %}
+Calle **Cabestreros** arranca de Fernán González y sube hacia San Esteban: está **en la ladera del Castillo**, a un par de minutos del portal.
 
-### 4. Otras opciones que se citan
+⚠️ De esa zona hay **denuncias reiteradas de robos en coches**, incluido un caso documentado a plena luz del día. Conviene ser precisos: los casos que encontramos son del **aparcamiento de arriba, junto a la fortaleza** — descampado y sin vecinos —, no de la calle Cabestreros, que es residencial. **El riesgo no es el mismo**, pero con dos coches cargados tres días, que no quede nada a la vista.
 
-- **Las Corazas** (42.3454, -3.7122) — gratuito, pero **solo unas 20 plazas** en un solar sin urbanizar. A 500 m y 8 min de la Catedral. Se llena.
-- **El Parral**, al oeste junto al Hospital del Rey — zona amplia, la más alejada. No he podido verificarlo como aparcamiento con plazas señalizadas.
-- **Pozo Seco** — circula como primera opción, pero **la plaza se peatonalizó en 2011 y perdió 20 plazas de aparcamiento**. No lo he podido confirmar como aparcamiento hoy: no contéis con él.
+{% gmap "Calle Cabestreros, Burgos", "Calle Cabestreros — zona gratuita junto al alojamiento" %}
 
-### 5. Recomendación
+### 5. Otras opciones que se citan
 
-1. Llegar por la **N-I / Avenida de Cantabria**, no metiendo «Fernán González 34» en el navegador como destino final.
-2. **Acercarse a descargar** las maletas al portal (con la autorización del alojamiento, si la tramita).
-3. Llevar los coches a **Antigua Estación** si preferís no pagar, o a **Plaza Vega** si preferís dormir tranquilos.
-4. **No tocarlos hasta el día 19**, que es cuando hacen falta para Atapuerca.
+- **Antigua Estación** (Bulevar Ferroviario 2) — gratuito, **180 plazas**, 24 h, asfaltado. A **15 minutos andando**: buen plan C, incómodo con maletas.
+- **Plaza Vega** — subterráneo y vigilado, 10–18 €/día. Ya no compensa: Plaza Mayor está más cerca y con el descuento sale más barato.
+- **Las Corazas** (42.3454, -3.7122) — gratuito, pero **solo unas 20 plazas**. Se llena.
+- **Pozo Seco** — circula como primera opción, pero **la plaza se peatonalizó en 2011**. No contéis con él.
+
+### 6. Recomendación
+
+1. Llegar por la **N-I / Avenida de Cantabria**.
+2. Probar la **zona gratuita** de Fernán González 31 / Cabestreros. Si hay sitio, resuelto.
+3. Si está llena, entrar al **Parking Plaza Mayor** y pedir el ticket descuento.
+4. Subir andando con las maletas: **al portal no se llega en coche**.
+5. **No tocar los coches hasta el día 19**, que es cuando hacen falta para Atapuerca.
 
 ### Otros
 - **Repostar** antes de salir hacia Valencia el día 2.
@@ -101,7 +111,7 @@ Burgos tiene red de autobuses urbanos, útil sobre todo para la **Cartuja de Mir
 ## Tareas pendientes
 
 - **Mirar la etiqueta ambiental de los dos coches** antes de salir (0, ECO, C o B para entrar en la ZBE).
-- **Preguntar al alojamiento** si tramita la autorización de ZBE para clientes, o cómo se pide.
-- **Decidir aparcamiento**: Antigua Estación (gratis, 15 min) o Plaza Vega (vigilado, de pago).
+- ~~Preguntar al alojamiento por el aparcamiento~~ — **contestado en el check-in**: zona gratuita en Fernán González 31 / Cabestreros, o Plaza Mayor a 15 € con su descuento.
+- **Avisarles del ticket descuento** si acabáis en el Parking Plaza Mayor.
 - ~~Coche vs. lanzadera para Atapuerca~~ — **coche propio hasta el CAREX**.
 - La **Cartuja de Miraflores** ya no está en el plan: el día 20 se sale temprano hacia el dolmen.
