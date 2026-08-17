@@ -119,8 +119,3 @@ modernas**. Se iza una cada año al terminar la campaña de excavación. No son 
 - «Dólmenes de La Lora, una ruta al encuentro con la Prehistoria» — <https://www.burgossinirmaslejos.com/blog/dolmenes-de-la-lora-una-ruta-al-encuentro-con-la-prehistoria/>
 - Museo de Burgos, exposición permanente (JCyL) — <https://museoscastillayleon.jcyl.es/web/es/museoburgos/visita/exposicion-permanente.html>
 - «El megalitismo de La Lora burgalesa, Atapuerca y Jaramillo, un espacio continuo» (Dialnet) — <https://dialnet.unirioja.es/descarga/articulo/237731.pdf>
-
-## Tareas pendientes
-
-- **Verificar el apartado de la conexión con Atapuerca** antes de darlo por bueno.
-- Si el día 20 sale una foto mejor del dolmen (con luz de agosto y con el grupo), sustituir el `hero`.

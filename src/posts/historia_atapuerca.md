@@ -133,9 +133,3 @@ dolmen de nosotros.
 - «El Cráneo 17 de la Sima de los Huesos» (Museo de la Evolución Humana): <https://museoevolucionhumana.com/es/blog-cientifico/el-craneo-17-de-la-sima-de-los-huesos>
 - Fundación Atapuerca: <https://www.atapuerca.org/>
 - Museo de la Evolución Humana: <https://www.museoevolucionhumana.com/>
-
-## Tareas pendientes
-
-- **Reservar el pase guiado**, que sigue siendo lo único del viaje que puede agotarse.
-- Preguntar al guía por **Pink**: es de 2025 y puede que aún no esté en los paneles.
-- Sustituir el `hero` por una foto propia de la trinchera si sale buena el día 19.

@@ -1,6 +1,18 @@
 ---
 layout: base.njk
 ---
+{% if modulo == "Historia" %}
+  {% set volverUrl = '/historia/' %}{% set volverTxt = 'Historia' %}
+{% elif modulo == "Recursos" %}
+  {% set volverUrl = '/recursos/' %}{% set volverTxt = 'Recursos' %}
+{% else %}
+  {% set volverUrl = '/' %}{% set volverTxt = 'la guía' %}
+{% endif %}
+
+<nav class="ficha-nav ficha-nav-top" aria-label="Volver">
+  <a href="{{ volverUrl | url }}" class="ficha-nav-link">&lsaquo; {{ volverTxt | capitalize }}</a>
+</nav>
+
 <article class="row g-4 align-items-stretch">
   {% if hero %}
     <div class="col-12 col-lg-7">
@@ -36,3 +48,11 @@ layout: base.njk
 <div class="mt-4 content">
   {{ content | safe }}
 </div>
+
+<nav class="ficha-nav ficha-nav-bottom" aria-label="Navegación de la ficha">
+  <a href="{{ volverUrl | url }}" class="ficha-nav-btn">&lsaquo; Volver a {{ volverTxt }}</a>
+  {% if volverUrl != '/' %}
+    <a href="{{ '/' | url }}" class="ficha-nav-btn">Inicio de la guía</a>
+  {% endif %}
+  <a href="#" class="ficha-nav-btn ficha-nav-top-link">&uarr; Arriba</a>
+</nav>

@@ -130,4 +130,3 @@ tardes de agosto son cálidas y las noches, francamente frescas. Llevad una capa
 
 - Si queréis meter la **Casa del Cordón** en el paseo del día 18, está en la Plaza de la Libertad, a
   un paso del Espolón — comprobar si se puede entrar (hoy es sede de una fundación bancaria).
-- Añadir foto propia del casco y sustituir el `hero`, que ahora mismo es la ilustración de la ruta.

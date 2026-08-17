@@ -98,8 +98,6 @@ Fuente: [Amanecer/atardecer en Burgos (agosto 2026)](https://www.timeanddate.com
 > Para el contexto completo —incluido *Pink*, la cara de 1,4 millones de años publicada en 2025— está la ficha de Historia: {% wiki "historia_atapuerca", "Atapuerca y la evolución humana" %}
 
 ## Tareas pendientes
-- ~~Reservar el pase guiado~~ — **hecho: 15:00, punto de encuentro CAREX**.
-- ~~Comprobar desde dónde sale el autobús~~ — **hecho: CAREX, en el pueblo de Atapuerca**.
 - **Llevar el correo de confirmación en el móvil** (la reserva está a nombre de Tere) y **retirar las entradas antes de las 14:45**. Es el único plazo duro del día.
 - Mirar en la confirmación **si el pase fue gratuito** (los miércoles lo son con reserva) y si incluye el CAREX.
 - **Decidir el CAREX** de las 18:15: alarga el día hasta la noche.
