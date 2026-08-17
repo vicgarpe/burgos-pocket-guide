@@ -3,8 +3,8 @@ layout: post.njk
 title: "Documentos — Reservas del viaje"
 excerpt: "Reservas, entradas y papeles del grupo, guardados en Dropbox y accesibles desde el móvil con la contraseña del viaje."
 modulo: "Recursos"
-hero: "/images/placeholder-hero.svg"
-alt: "Imagen pendiente — documentos y reservas del viaje"
+hero: "/images/documentos-reservas-800.jpg"
+alt: "Tres personas sentadas alrededor de una mesa cubierta de reservas, entradas y mapas; una sostiene en alto una hoja de «Reserva confirmada» con el alojamiento, los restaurantes y las entradas marcados, y al fondo se ve la Catedral por la ventana y un cartel de Burgos"
 templateEngineOverride: njk,md
 permalink: /recursos/recursos_docu-reservas/
 ---
@@ -29,4 +29,3 @@ De los PDF y los ofimáticos se ve una **vista previa de la primera página**; l
 
 - Subir el **justificante del alojamiento** de Fernán González.
 - Subir la **reserva de Comosapiens** si os mandaron confirmación por escrito.
-- Añadir imagen propia y sustituir el placeholder del `hero`.
