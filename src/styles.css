@@ -524,7 +524,12 @@ a:hover{
    ═══════════════════════════════════════════════════════════ */
 
 /* Botón de subida */
-.gallery-upload-btn{
+/* Estilo único de botón del sitio: galería, documentos, finanzas y la
+   navegación de las fichas comparten esta misma pinta, para que un botón se
+   reconozca como botón esté donde esté. */
+.gallery-upload-btn,
+.ficha-nav-btn,
+.fin-ocr-label{
   display: inline-flex;
   align-items: center;
   gap: .45rem;
@@ -541,7 +546,9 @@ a:hover{
   transition: background .13s;
   line-height: 1;
 }
-.gallery-upload-btn:hover{ background: #9b3221; }
+.gallery-upload-btn:hover,
+.ficha-nav-btn:hover,
+.fin-ocr-label:hover{ background: #9b3221; color: #fff; }
 
 /* Botones cancelar / descargar */
 .gallery-action-btn{
@@ -984,21 +991,6 @@ a:hover{
 .fin-del-btn:hover{ background: #fee8e8; color: #c0392b; }
 
 .fin-ocr-area{ text-align: center; }
-.fin-ocr-label{
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: .88rem;
-  font-weight: 600;
-  color: var(--muted);
-  border: 1px dashed var(--rule);
-  border-radius: .65rem;
-  padding: .6rem 1.1rem;
-  transition: background .15s;
-}
-.fin-ocr-label:hover{ background: #f5f0eb; color: var(--accent); border-color: var(--accent); }
 .fin-ocr-preview{
   width: 100%;
   max-height: 180px;
@@ -1151,14 +1143,12 @@ a:hover{
 /* =========================================================
    Navegación de fichas (arriba y al pie de cada post)
    ========================================================= */
-.ficha-nav{
+.ficha-nav-top{
   font-family: var(--font-sans);
   font-size: .82rem;
   letter-spacing: .05em;
   text-transform: uppercase;
   font-weight: 700;
-}
-.ficha-nav-top{
   margin-bottom: 1.1rem;
 }
 .ficha-nav-link{
@@ -1175,26 +1165,9 @@ a:hover{
   padding-top: 1.25rem;
   border-top: 1px solid var(--rule);
 }
-.ficha-nav-btn{
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  padding: .5rem .9rem;
-  border: 1px solid var(--rule);
-  border-radius: 2rem;
-  background: var(--paper);
-  color: var(--muted);
-  text-decoration: none;
-  transition: color .13s, border-color .13s, background .13s;
-}
-.ficha-nav-btn:hover{
-  color: var(--accent);
-  border-color: var(--accent);
-  background: #faf6f4;
-}
+.ficha-nav-btn{ text-decoration: none; }
 .ficha-nav-top-link{ margin-left: auto; }
 @media (max-width: 480px){
-  .ficha-nav-btn{ font-size: .76rem; padding: .45rem .75rem; }
   .ficha-nav-top-link{ margin-left: 0; }
 }
 
