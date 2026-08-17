@@ -46,7 +46,17 @@
   // ── Auth gate unificado ───────────────────────────────────────
   (function () {
     var COOKIE = 'viaje_ok';
-    var PWD    = 'bollagas';
+    // La contraseña NO viaja en la página: solo su SHA-256. Se compara el
+    // digest de lo que teclea el usuario. Las páginas privadas (Galería,
+    // Finanzas y Documentos) van además cifradas con AES-GCM, que es la
+    // protección de verdad; esta pantalla es la segunda capa.
+    var PWD_SHA = 'fa905246f92662a4dec4543f52c980b8fdf5262612db38c31a203f2b98af8ec7';
+
+    async function sha256Hex(txt) {
+      var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+      return Array.from(new Uint8Array(buf))
+        .map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
 
     function getCookie(n) {
       return (document.cookie.split(';').map(function(c){ return c.trim(); })
@@ -63,10 +73,10 @@
     }
 
     window.viajeAuth = {
-      check: function (el) {
+      check: async function (el) {
         var screen = el.closest('[data-gate-screen]') || el.closest('[data-gate]').querySelector('[data-gate-screen]');
         var input  = screen.querySelector('.viaje-gate-input');
-        if (input.value === PWD) {
+        if (await sha256Hex(input.value) === PWD_SHA) {
           setCookie(COOKIE, '1', 30);
           document.querySelectorAll('[data-gate]').forEach(revealGate);
           document.dispatchEvent(new CustomEvent('viaje:unlocked'));
