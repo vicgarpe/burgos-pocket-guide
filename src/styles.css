@@ -636,6 +636,7 @@ a:hover{
 /* Selector de agrupación */
 .gallery-grp-sel{
   display: flex;
+  flex-wrap: wrap;
   gap: .35rem;
 }
 .gallery-grp-btn{
@@ -1196,3 +1197,24 @@ a:hover{
   .ficha-nav-btn{ font-size: .76rem; padding: .45rem .75rem; }
   .ficha-nav-top-link{ margin-left: 0; }
 }
+
+/* Selector de carpeta de destino, junto al botón Subir de Documentos */
+.doc-folder-select{
+  font-family: var(--font-sans);
+  font-size: .8rem;
+  padding: .35rem .5rem;
+  border: 1px solid var(--rule);
+  border-radius: .4rem;
+  background: var(--paper);
+  color: var(--muted);
+  max-width: 11rem;
+}
+.doc-folder-select:focus{ outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Distintivos de los tipos que llegan por el archivado de tickets */
+.doc-ext--json .doc-card-ext{ background: #8a6d1d33; color: #8a6d1d; }
+.doc-ext--jpg  .doc-card-ext,
+.doc-ext--jpeg .doc-card-ext,
+.doc-ext--png  .doc-card-ext,
+.doc-ext--heic .doc-card-ext,
+.doc-ext--webp .doc-card-ext{ background: #2f6f7a33; color: #2f6f7a; }

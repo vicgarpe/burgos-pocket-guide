@@ -9,9 +9,9 @@ permalink: /docu-reservas/index.html
 </nav>
 
 {% gate %}
-<div class="d-flex align-items-center justify-content-between mb-3">
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
   <h2 class="module-title mb-0">Documentos</h2>
-  <div class="d-flex gap-2 align-items-center">
+  <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
     <button class="gallery-action-btn gallery-cancel-btn d-none" id="doc-cancel-btn">✕ Cancelar</button>
     <button class="gallery-action-btn gallery-download-btn d-none" id="doc-download-btn" disabled>
       <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
@@ -33,9 +33,12 @@ permalink: /docu-reservas/index.html
       </svg>
       Subir
     </label>
-    <input type="file" id="doc-upload-input"
-           accept=".pdf,.txt,.md,.org,.doc,.docx,.xls,.xlsx,application/pdf,text/plain,text/markdown"
-           multiple class="d-none">
+    <select id="doc-folder-select" class="doc-folder-select d-none"
+            aria-label="Carpeta de destino al subir">
+      <option value="">Sin carpeta</option>
+      <option value="__nueva__">+ Carpeta nueva…</option>
+    </select>
+    <input type="file" id="doc-upload-input" multiple class="d-none">
   </div>
 </div>
 
@@ -49,6 +52,7 @@ permalink: /docu-reservas/index.html
 <div id="doc-group-selector" class="gallery-grp-sel mb-3 d-none">
   <button class="gallery-grp-btn active" data-group="day">Fecha</button>
   <button class="gallery-grp-btn" data-group="type">Tipo</button>
+  <button class="gallery-grp-btn" data-group="folder">Carpeta</button>
   <button class="gallery-grp-btn" data-group="none">Todos</button>
 </div>
 
@@ -85,9 +89,24 @@ const UPLOAD = {
   partSize:       {{ galeria.uploadPartSize }} * 1024 * 1024
 };
 
-// Las extensiones que este módulo considera "documento". Todo lo demás
-// (fotos y vídeos) se lo queda la Galería, que comparte carpeta de Dropbox.
-const DOC_RE = /\.(pdf|txt|md|org|docx?|xlsx?)$/i;
+// Reparto con la Galería, que comparte carpeta de Dropbox:
+//   · en la raíz  → aquí solo los documentos; las fotos son de la Galería.
+//   · en subcarpeta → aquí todo, sea lo que sea (los tickets son .jpg + .json).
+// La Galería lista sin recursividad, así que nunca ve las subcarpetas: por eso
+// los tickets no le ensucian el carrete.
+const DOC_RE = /\.(pdf|txt|md|org|docx?|xlsx?|json)$/i;
+
+// Ruta de la carpeta raíz en minúsculas, que es como Dropbox devuelve path_lower.
+const ROOT_LOWER = DROPBOX.folder.toLowerCase();
+
+// '' = raíz (se muestra como «Sin carpeta»).
+function folderOf(file) {
+  const rel = (file.path_lower || '').startsWith(ROOT_LOWER + '/')
+    ? file.path_lower.slice(ROOT_LOWER.length + 1)
+    : '';
+  const i = rel.lastIndexOf('/');
+  return i < 0 ? '' : rel.slice(0, i);
+}
 
 let token = null;
 let allDocs = [];
@@ -108,15 +127,16 @@ async function initDocs() {
     token = await getAccessToken();
     const entries = await listFolder();
     allDocs = sortByDate(entries.filter(isDoc));
+    refreshFolderSelect(allDocs);
     if (!allDocs.length) {
       setStatus('hide');
       document.getElementById('doc-empty').classList.remove('d-none');
-      document.getElementById('doc-upload-label').classList.remove('d-none');
+      showUploadUI(true);
       return;
     }
     setStatus('hide');
     document.getElementById('doc-group-selector').classList.remove('d-none');
-    document.getElementById('doc-upload-label').classList.remove('d-none');
+    showUploadUI(true);
     renderList(allDocs);
   } catch (err) {
     showError(err.message || 'No se pudo cargar la lista de documentos.');
@@ -153,7 +173,7 @@ async function dbxJSON(url, body) {
 async function listFolder() {
   let entries = [];
   let d = await dbxJSON('https://api.dropboxapi.com/2/files/list_folder', {
-    path: DROPBOX.folder, limit: 200
+    path: DROPBOX.folder, recursive: true, limit: 200
   });
   entries = entries.concat(d.entries || []);
   while (d.has_more) {
@@ -164,7 +184,8 @@ async function listFolder() {
 }
 
 function isDoc(f) {
-  return f['.tag'] === 'file' && DOC_RE.test(f.name);
+  if (f['.tag'] !== 'file') return false;
+  return DOC_RE.test(f.name) || folderOf(f) !== '';
 }
 
 function extOf(name) {
@@ -189,7 +210,7 @@ async function getTempLink(path) {
 
 const THUMB_SIZE  = 'w480h320';
 const THUMB_CACHE = 'bgp-docs-v1';
-const THUMBABLE   = /\.(pdf|docx?|xlsx?)$/i;
+const THUMBABLE   = /\.(pdf|docx?|xlsx?|jpe?g|png|gif|webp|heic)$/i;
 
 let   thumbCache = undefined;
 const thumbURLs  = {};
@@ -286,13 +307,15 @@ function fmtDate(iso) {
 }
 
 function groupKey(file, groupBy) {
-  if (groupBy === 'day')  return (file.client_modified || '').slice(0, 10);
-  if (groupBy === 'type') return extOf(file.name);
+  if (groupBy === 'day')    return (file.client_modified || '').slice(0, 10);
+  if (groupBy === 'type')   return extOf(file.name);
+  if (groupBy === 'folder') return folderOf(file);
   return '';
 }
 
 function groupLabel(key, groupBy) {
-  if (groupBy === 'type') return key.toUpperCase();
+  if (groupBy === 'type')   return key.toUpperCase();
+  if (groupBy === 'folder') return key ? key.replace(/\//g, ' › ') : 'Sin carpeta';
   if (!key) return 'Sin fecha';
   return fmtDate(key + 'T00:00:00');
 }
@@ -398,6 +421,44 @@ async function openDoc(file) {
   }
 }
 
+// ─── Carpetas ────────────────────────────────────────────────────────────────
+// Son carpetas de verdad en Dropbox, no un prefijo en el nombre: así se ven y
+// se manejan igual desde la app de Dropbox del móvil.
+
+function showUploadUI(on) {
+  document.getElementById('doc-upload-label').classList.toggle('d-none', !on);
+  document.getElementById('doc-folder-select').classList.toggle('d-none', !on);
+}
+
+// Carpeta elegida para la próxima subida ('' = raíz).
+let uploadFolder = '';
+
+function knownFolders(files) {
+  return [...new Set(files.map(folderOf).filter(Boolean))].sort();
+}
+
+function refreshFolderSelect(files) {
+  const sel = document.getElementById('doc-folder-select');
+  const previo = uploadFolder;
+  sel.replaceChildren();
+  const opt = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
+  opt('', 'Sin carpeta');
+  for (const f of knownFolders(files)) opt(f, f.replace(/\//g, ' › '));
+  if (previo && !knownFolders(files).includes(previo)) opt(previo, previo);
+  opt('__nueva__', '+ Carpeta nueva…');
+  sel.value = previo;
+}
+
+document.getElementById('doc-folder-select').addEventListener('change', e => {
+  if (e.target.value !== '__nueva__') { uploadFolder = e.target.value; return; }
+  const nombre = (prompt('Nombre de la carpeta nueva:') || '').trim()
+    .replace(/[\\:*?"<>|]/g, '').replace(/^\/+|\/+$/g, '');
+  if (!nombre) { e.target.value = uploadFolder; return; }
+  uploadFolder = nombre;
+  refreshFolderSelect(allDocs);
+  e.target.value = nombre;
+});
+
 // ─── Selección ───────────────────────────────────────────────────────────────
 
 const canShare = !!(navigator.share && (
@@ -414,7 +475,7 @@ function enterSelectMode(idx) {
   document.getElementById('doc-cancel-btn').classList.remove('d-none');
   document.getElementById('doc-download-btn').classList.remove('d-none');
   if (canShare) document.getElementById('doc-share-btn').classList.remove('d-none');
-  document.getElementById('doc-upload-label').classList.add('d-none');
+  showUploadUI(false);
   updateSelectUI();
 }
 
@@ -429,7 +490,7 @@ function exitSelectMode() {
   document.getElementById('doc-cancel-btn').classList.add('d-none');
   const dl = document.getElementById('doc-download-btn'); dl.classList.add('d-none'); dl.disabled = true;
   const sh = document.getElementById('doc-share-btn');    sh.classList.add('d-none'); sh.disabled = true;
-  document.getElementById('doc-upload-label').classList.remove('d-none');
+  showUploadUI(true);
 }
 
 function toggleSelect(idx) {
@@ -476,7 +537,10 @@ const MIME = {
   doc: 'application/msword',
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   xls: 'application/vnd.ms-excel',
-  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  json: 'application/json',
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+  gif: 'image/gif', webp: 'image/webp', heic: 'image/heic'
 };
 
 document.getElementById('doc-download-btn').addEventListener('click', async () => {
@@ -584,11 +648,13 @@ document.getElementById('doc-upload-input').addEventListener('change', async e =
   const chosen = Array.from(e.target.files);
   if (!chosen.length) return;
 
-  // Se rechaza aquí lo que la Galería debería llevarse, para no ensuciar.
-  const files    = chosen.filter(f => DOC_RE.test(f.name));
-  const rejected = chosen.filter(f => !DOC_RE.test(f.name));
+  // Misma regla que en el listado: en la raíz solo documentos —las fotos son de
+  // la Galería—, pero dentro de una carpeta cabe cualquier cosa.
+  const admitido = f => uploadFolder !== '' || DOC_RE.test(f.name);
+  const files    = chosen.filter(admitido);
+  const rejected = chosen.filter(f => !admitido(f));
   if (rejected.length) {
-    alert(`Estos no son documentos y no se han subido:\n\n${rejected.map(f => '· ' + f.name).join('\n')}\n\nLas fotos y vídeos van en la Galería.`);
+    alert(`Estos no son documentos y no se han subido:\n\n${rejected.map(f => '· ' + f.name).join('\n')}\n\nLas fotos y vídeos van en la Galería. Si quieres guardarlos aquí igualmente, elige antes una carpeta.`);
   }
   if (!files.length) { e.target.value = ''; return; }
 
@@ -623,21 +689,27 @@ document.getElementById('doc-upload-input').addEventListener('change', async e =
     setStatus('show');
     token = await getAccessToken();
     allDocs = sortByDate((await listFolder()).filter(isDoc));
+    refreshFolderSelect(allDocs);
     setStatus('hide');
     document.getElementById('doc-group-selector').classList.remove('d-none');
     renderList(allDocs);
   }, 1200);
 });
 
-async function safeDestPath(name) {
+function destDir(folder) {
+  return folder ? DROPBOX.folder + '/' + folder : DROPBOX.folder;
+}
+
+async function safeDestPath(name, folder) {
   const base = name.replace(/(\.[^.]+)$/, '');
   const ext  = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
-  let candidate = DROPBOX.folder + '/' + name;
+  const dir  = destDir(folder);
+  let candidate = dir + '/' + name;
   let n = 1;
   while (true) {
     const r = await dbxJSON('https://api.dropboxapi.com/2/files/get_metadata', { path: candidate });
     if (r['.tag'] === 'file' || r['.tag'] === 'folder') {
-      candidate = `${DROPBOX.folder}/${base} (${n++})${ext}`;
+      candidate = `${dir}/${base} (${n++})${ext}`;
     } else {
       return candidate;
     }
@@ -671,8 +743,9 @@ function uploadSingle(file, destPath, onProgress, onStatus) {
 
 async function uploadFile(file, onProgress, onStatus) {
   onStatus(`${file.name} — comprobando nombre…`);
-  const destPath = await safeDestPath(file.name);
-  if (destPath !== DROPBOX.folder + '/' + file.name) {
+  const folder   = uploadFolder;
+  const destPath = await safeDestPath(file.name, folder);
+  if (destPath !== destDir(folder) + '/' + file.name) {
     onStatus(`${file.name} — duplicado, se guardará como "${destPath.split('/').pop()}"`);
   }
   // Un documento nunca va a pasar del umbral de troceado, así que basta la

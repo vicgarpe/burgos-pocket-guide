@@ -29,8 +29,12 @@ const MAX_TOKENS = 1024;
 // Para añadir un viaje nuevo basta con una entrada más en esta tabla.
 const VIAJES = {
   burgos: {
-    path: '/Apps/burgos-finanzas/finanzas.json',
-    tz:   'Europe/Madrid',
+    path:    '/Apps/burgos-finanzas/finanzas.json',
+    tz:      'Europe/Madrid',
+    // Misma carpeta que usan la Galería y Documentos: las credenciales de
+    // Dropbox del worker son las mismas que las del frontend.
+    archivo: '/Almacen-archivo/2026-burgos',
+    tickets: 'tickets',
   },
 };
 const VIAJE_DEFAULT = 'burgos';
@@ -131,6 +135,28 @@ async function dropboxWrite(env, viaje, data) {
     const err = await res.text();
     throw new Error(`Dropbox write error ${res.status}: ${err}`);
   }
+}
+
+// Sube bytes a una ruta cualquiera de Dropbox. Devuelve la metadata, que trae
+// el nombre definitivo (autorename puede haberlo cambiado si ya existía).
+async function dropboxUpload(env, path, bytes) {
+  const token = await dropboxAccessToken(env);
+  const res = await fetch('https://content.dropboxapi.com/2/files/upload', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Dropbox-API-Arg': JSON.stringify({ path, mode: 'add', autorename: true, mute: true }),
+      // Dropbox RECHAZA el MIME real aquí: solo admite octet-stream. El tipo de
+      // la foto se conserva en la extensión del nombre, no en la cabecera.
+      'Content-Type': 'application/octet-stream',
+    },
+    body: bytes,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Dropbox upload error ${res.status}: ${err}`);
+  }
+  return res.json();
 }
 
 // ── Finanzas handlers ────────────────────────────────────────────────────────
@@ -250,10 +276,12 @@ async function handleCancelacionDelete(id, env, viaje) {
 }
 
 // ── OCR de tickets ───────────────────────────────────────────────────────────
-// No guarda nada, así que no depende del viaje.
+// Lee el ticket con Claude y, además, archiva la foto y su ficha JSON en
+// <archivo>/tickets del viaje. Si el archivado falla, el OCR se devuelve igual.
 
-async function handleOcr(request, env) {
+async function handleOcr(request, env, viaje) {
   let base64;
+  let bytes = null;               // los bytes crudos, para archivar en Dropbox
   let mediaType = 'image/jpeg';
 
   const contentType = request.headers.get('content-type') || '';
@@ -271,6 +299,7 @@ async function handleOcr(request, env) {
     }
     mediaType = file.type || 'image/jpeg';
     const buf = await file.arrayBuffer();
+    bytes = buf;
     const uint8 = new Uint8Array(buf);
     let binary = '';
     for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
@@ -287,6 +316,7 @@ async function handleOcr(request, env) {
     }
     base64 = body.imagen_b64;
     if (body.media_type) mediaType = body.media_type;
+    try { bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0)); } catch { bytes = null; }
   }
 
   const ocrPrompt = `Analiza esta imagen de un ticket o factura y extrae los siguientes datos.
@@ -363,12 +393,76 @@ Los demás campos:
     return errorResponse(`La respuesta de Claude no era JSON válido: ${rawContent}`, 502);
   }
 
+  // El archivado es un extra: si Dropbox falla, el OCR se devuelve igual y el
+  // gasto se puede apuntar. Nunca debe tumbar la lectura del ticket.
+  let archivo = null;
+  if (bytes && viaje?.archivo) {
+    try {
+      archivo = await archivarTicket(env, viaje, bytes, mediaType, parsed);
+    } catch (err) {
+      archivo = { error: err.message };
+    }
+  }
+
   return jsonResponse({
     fecha: parsed.fecha ?? null,
     importe: parsed.importe ?? null,
     descripcion: parsed.descripcion ?? null,
     confiabilidad_ocr: parsed.confiabilidad_ocr ?? null,
+    archivo,
   });
+}
+
+// ── Archivado de tickets en Dropbox ──────────────────────────────────────────
+// La foto y su JSON se guardan juntos en <archivo>/tickets con el mismo nombre
+// base, así que en Documentos aparecen emparejados uno detrás de otro.
+
+function slugify(txt) {
+  return (txt || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+}
+
+function horaLocal(tz) {
+  const p = new Intl.DateTimeFormat('es-ES', {
+    timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(new Date());
+  const get = t => p.find(x => x.type === t)?.value || '00';
+  return get('hour') + get('minute');
+}
+
+const EXT_POR_MIME = {
+  'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png',
+  'image/webp': 'webp', 'image/heic': 'heic', 'image/gif': 'gif',
+};
+
+async function archivarTicket(env, viaje, bytes, mediaType, parsed) {
+  const fecha = /^\d{4}-\d{2}-\d{2}$/.test(parsed.fecha || '')
+    ? parsed.fecha
+    : hoy(viaje.tz);
+  const nombre = `${fecha}_${horaLocal(viaje.tz)}_${slugify(parsed.descripcion) || 'ticket'}`;
+  const dir    = `${viaje.archivo}/${viaje.tickets}`;
+  const ext    = EXT_POR_MIME[(mediaType || '').toLowerCase()] || 'jpg';
+
+  const meta = await dropboxUpload(env, `${dir}/${nombre}.${ext}`, bytes);
+
+  // El JSON hereda el nombre REAL de la imagen: si Dropbox tuvo que renombrar
+  // por duplicado, la pareja sigue casando.
+  const base = meta.name.replace(/\.[^.]+$/, '');
+  const ficha = JSON.stringify({
+    fecha: parsed.fecha ?? null,
+    importe: parsed.importe ?? null,
+    descripcion: parsed.descripcion ?? null,
+    confiabilidad_ocr: parsed.confiabilidad_ocr ?? null,
+    imagen: meta.name,
+    escaneado_en: new Date().toISOString(),
+  }, null, 2);
+  await dropboxUpload(env, `${dir}/${base}.json`, new TextEncoder().encode(ficha));
+
+  return { carpeta: viaje.tickets, imagen: meta.name, json: `${base}.json` };
 }
 
 // ── Router ───────────────────────────────────────────────────────────────────
@@ -401,16 +495,17 @@ export default {
 
       // ── Rutas de finanzas ───────────────────────────────────────────
       if (pathname.startsWith('/finanzas')) {
-        // El OCR no toca el almacenamiento, así que no necesita viaje.
-        if (pathname === '/finanzas/ocr' && method === 'POST') {
-          return handleOcr(request, env);
-        }
-
         const viaje = resolveViaje(url);
         if (!viaje) {
           return errorResponse(
             `Viaje desconocido. Viajes válidos: ${Object.keys(VIAJES).join(', ')}.`
           );
+        }
+
+        // El OCR ya no es apátrida: archiva la foto y su ficha en la carpeta
+        // del viaje, así que necesita saber de qué viaje se trata.
+        if (pathname === '/finanzas/ocr' && method === 'POST') {
+          return handleOcr(request, env, viaje);
         }
 
         if (pathname === '/finanzas' && method === 'GET') {

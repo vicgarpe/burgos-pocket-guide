@@ -363,7 +363,15 @@ document.getElementById('ocr-input').addEventListener('change', async function(e
     if (data.importe)     document.getElementById('gasto-importe').value = data.importe;
     if (data.fecha)       document.getElementById('gasto-fecha').value = data.fecha;
 
-    ocrStatus.textContent = data.confiabilidad_ocr || 'Ticket analizado.';
+    // El worker guarda la foto y su ficha en Documentos › tickets. Si eso
+    // falla no pasa nada con el gasto, pero conviene enterarse.
+    var nota = data.confiabilidad_ocr || 'Ticket analizado.';
+    if (data.archivo && data.archivo.imagen) {
+      nota += ' · Guardado en Documentos › ' + data.archivo.carpeta + '/' + data.archivo.imagen;
+    } else if (data.archivo && data.archivo.error) {
+      nota += ' · OJO: no se pudo archivar la foto (' + data.archivo.error + ')';
+    }
+    ocrStatus.textContent = nota;
   } catch(e) {
     ocrStatus.textContent = 'No se pudo leer el ticket: ' + e.message;
     ocrStatus.style.color = '#7a3523';

@@ -15,4 +15,6 @@ Aquí van las **reservas, entradas y documentación** del grupo: el PDF del yaci
 
 {% docureservas "Abrir Documentos..." %}
 
-Se abre con la contraseña del viaje. Cada documento se puede **abrir, descargar y compartir**, y con una **pulsación larga** encima se entra en modo selección para bajar varios de golpe.
+Se abre con la contraseña del viaje. Cada documento se puede **abrir, descargar y compartir**, y con una **pulsación larga** encima se entra en modo selección para bajar varios de golpe. Se agrupa por fecha, tipo o **carpeta**, y al subir se elige en cuál va.
+
+Las fotos de tickets que escaneáis desde **Finanzas** se archivan solas en la carpeta `tickets`, cada una con su ficha de lo que leyó el escáner.
